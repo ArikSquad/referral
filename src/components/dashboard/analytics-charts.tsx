@@ -5,8 +5,6 @@ import {
     Area,
     AreaChart,
     CartesianGrid,
-    ResponsiveContainer,
-    Tooltip,
     XAxis,
     YAxis
 } from 'recharts'
@@ -14,31 +12,63 @@ import {
 import { api } from '../../../convex/_generated/api'
 import { clickSeries } from '@/lib/site'
 
-function dayKey(ts: number) {
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle
+} from '@/components/ui/card'
+import {
+    ChartConfig,
+    ChartContainer,
+    ChartTooltip,
+    ChartTooltipContent
+} from '@/components/ui/chart'
+
+type ClickPoint = {
+    day: string
+    clicks: number
+}
+
+const chartConfig = {
+    clicks: {
+        label: 'Clicks',
+        color: 'var(--chart-1)'
+    }
+} satisfies ChartConfig
+
+function dateBucket(ts: number) {
+    return new Date(ts).toISOString().slice(0, 10)
+}
+
+function formatDay(key: string) {
     return new Intl.DateTimeFormat(undefined, {
         month: 'short',
         day: 'numeric'
-    }).format(new Date(ts))
+    }).format(new Date(key))
 }
 
-function groupClicks(clicks: Array<{ ts: number }>) {
+function groupClicks(clicks: Array<{ ts: number }>): ClickPoint[] {
     const buckets = new Map<string, number>()
 
     for (const click of clicks) {
-        const key = dayKey(click.ts)
+        const key = dateBucket(click.ts)
         buckets.set(key, (buckets.get(key) ?? 0) + 1)
     }
 
     return [...buckets.entries()]
-        .reverse()
-        .map(([day, count]) => ({ day, clicks: count }))
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([day, clicks]) => ({
+            day: formatDay(day),
+            clicks
+        }))
 }
 
 export function ClickAnalyticsChart() {
     const hasDataClient = Boolean(
-        (process.env.NEXT_PUBLIC_CONVEX_URL ||
-            process.env.NEXT_PUBLIC_CONVEX_CLOUD_URL) &&
-        process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+        process.env.NEXT_PUBLIC_CONVEX_URL &&
+            process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
     )
 
     if (!hasDataClient) {
@@ -51,64 +81,131 @@ export function ClickAnalyticsChart() {
 function ConnectedClickAnalyticsChart({
     fallback
 }: {
-    fallback: Array<{ day: string; clicks: number }>
+    fallback: ClickPoint[]
 }) {
     const auth = useConvexAuth()
+
     const clicks = useQuery(
         api.clicks.recentMine,
         auth.isAuthenticated ? {} : 'skip'
     )
 
     if (clicks === undefined) {
-        return <Chart data={fallback} />
+        return <Chart data={fallback} muted />
     }
 
     return <Chart data={groupClicks(clicks)} />
 }
 
-function Chart({ data }: { data: Array<{ day: string; clicks: number }> }) {
+function Chart({
+    data,
+    muted = false
+}: {
+    data: ClickPoint[]
+    muted?: boolean
+}) {
+    const totalClicks = data.reduce((sum, item) => sum + item.clicks, 0)
+
     return (
-        <div className="h-80 rounded-lg border bg-card p-4 shadow-sm">
-            <div className="mb-4">
-                <h2 className="text-base font-semibold">Clicks</h2>
-                <p className="text-sm text-muted-foreground">
-                    Redirect events by day.
-                </p>
-            </div>
-            <ResponsiveContainer width="100%" height="78%">
-                <AreaChart data={data} margin={{ left: 8, right: 8 }}>
-                    <defs>
-                        <linearGradient id="clicks" x1="0" x2="0" y1="0" y2="1">
-                            <stop
-                                offset="0%"
-                                stopColor="#111827"
-                                stopOpacity={0.28}
-                            />
-                            <stop
-                                offset="100%"
-                                stopColor="#111827"
-                                stopOpacity={0.02}
-                            />
-                        </linearGradient>
-                    </defs>
-                    <CartesianGrid stroke="#e5e7eb" strokeDasharray="3 3" />
-                    <XAxis dataKey="day" tickLine={false} axisLine={false} />
-                    <YAxis tickLine={false} axisLine={false} width={52} />
-                    <Tooltip
-                        contentStyle={{
-                            borderRadius: 8,
-                            border: '1px solid hsl(var(--border))'
+        <Card className="overflow-hidden">
+            <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+                <div>
+                    <CardTitle>Clicks</CardTitle>
+                    <CardDescription>
+                        Redirect events by day
+                    </CardDescription>
+                </div>
+
+                <div className="text-right">
+                    <div className="text-2xl font-bold tabular-nums">
+                        {totalClicks.toLocaleString()}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                        total clicks
+                    </div>
+                </div>
+            </CardHeader>
+
+            <CardContent className={muted ? 'opacity-60' : undefined}>
+                <ChartContainer
+                    config={chartConfig}
+                    className="h-[260px] w-full"
+                >
+                    <AreaChart
+                        accessibilityLayer
+                        data={data}
+                        margin={{
+                            top: 16,
+                            right: 12,
+                            left: 0,
+                            bottom: 0
                         }}
-                    />
-                    <Area
-                        type="monotone"
-                        dataKey="clicks"
-                        stroke="#111827"
-                        fill="url(#clicks)"
-                        strokeWidth={2}
-                    />
-                </AreaChart>
-            </ResponsiveContainer>
-        </div>
+                    >
+                        <defs>
+                            <linearGradient
+                                id="clicksGradient"
+                                x1="0"
+                                y1="0"
+                                x2="0"
+                                y2="1"
+                            >
+                                <stop
+                                    offset="5%"
+                                    stopColor="var(--color-clicks)"
+                                    stopOpacity={0.35}
+                                />
+                                <stop
+                                    offset="95%"
+                                    stopColor="var(--color-clicks)"
+                                    stopOpacity={0}
+                                />
+                            </linearGradient>
+                        </defs>
+
+                        <CartesianGrid
+                            vertical={false}
+                            strokeDasharray="3 3"
+                        />
+
+                        <XAxis
+                            dataKey="day"
+                            tickLine={false}
+                            axisLine={false}
+                            tickMargin={8}
+                            minTickGap={24}
+                        />
+
+                        <YAxis
+                            tickLine={false}
+                            axisLine={false}
+                            tickMargin={8}
+                            width={32}
+                            allowDecimals={false}
+                        />
+
+                        <ChartTooltip
+                            cursor={false}
+                            content={
+                                <ChartTooltipContent
+                                    indicator="line"
+                                    labelClassName="font-medium"
+                                />
+                            }
+                        />
+
+                        <Area
+                            dataKey="clicks"
+                            type="natural"
+                            stroke="var(--color-clicks)"
+                            strokeWidth={2.5}
+                            fill="url(#clicksGradient)"
+                            activeDot={{
+                                r: 5
+                            }}
+                        />
+                    </AreaChart>
+                </ChartContainer>
+            </CardContent>
+        </Card>
     )
 }
