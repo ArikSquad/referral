@@ -121,6 +121,7 @@ export function LinkTable({
                                             <Link
                                                 href={`/${link.slug}`}
                                                 target="_blank"
+                                                prefetch={false}
                                             >
                                                 Open
                                                 <ArrowUpRight className="size-4" />
