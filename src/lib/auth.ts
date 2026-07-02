@@ -3,17 +3,10 @@ import "server-only";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
-import { requiredPlan } from "@/lib/env";
-
 export type AppAccess =
-  | {
+  {
       mode: "clerk";
-      status: "active";
-      userName: string;
-    }
-  | {
-      mode: "clerk";
-      status: "pending-approval" | "rejected" | "needs-plan";
+      status: "active" | "pending-approval" | "rejected";
       userName: string;
     };
 
@@ -39,28 +32,19 @@ export async function getAppAccess(): Promise<AppAccess> {
   }
 
   const has = session.has as HasEntitlement;
-  const hasPaidPlan =
-    has({ plan: requiredPlan }) || has({ feature: "links:manage" });
+  const hasPaidPlan = has({ feature: "links:manage" });
 
-  if (hasPaidPlan) {
+  if (approvalStatus === "approved" && hasPaidPlan) {
     return {
       mode: "clerk",
       status: "active",
-      userName
-    };
-  }
-
-  if (approvalStatus !== "approved") {
-    return {
-      mode: "clerk",
-      status: "pending-approval",
       userName,
     };
   }
 
   return {
     mode: "clerk",
-    status: "needs-plan",
-    userName
+    status: "pending-approval",
+    userName,
   };
 }

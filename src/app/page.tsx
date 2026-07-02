@@ -66,7 +66,6 @@ export default function Home() {
           <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
             <a href="#api" className="hover:text-foreground">API</a>
             <a href="#features" className="hover:text-foreground">Features</a>
-            <Link href="/pricing" className="hover:text-foreground">Pricing</Link>
           </nav>
           <AuthNavActions />
         </div>
@@ -83,12 +82,6 @@ export default function Home() {
                 URL shortening for developers. Create links from your backend, redirect fast, and track clicks in one small dashboard.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Button size="lg" asChild>
-                  <Link href="/pricing">
-                    Start with paid access
-                    <ArrowRight className="size-4" />
-                  </Link>
-                </Button>
                 <Button size="lg" variant="outline" asChild>
                   <Link href="/app">Open dashboard</Link>
                 </Button>
@@ -147,7 +140,6 @@ console.log(link.url);`}</CodeBlock>
         <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-8 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <p>{siteConfig.name} by MikArt Europe</p>
           <div className="flex gap-4">
-            <Link href="/pricing" className="hover:text-foreground">Pricing</Link>
             <Link href="/app" className="hover:text-foreground">Dashboard</Link>
           </div>
         </div>

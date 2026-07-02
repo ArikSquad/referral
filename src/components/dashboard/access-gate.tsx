@@ -2,15 +2,13 @@ import { CreditCard, Hourglass, ShieldX } from "lucide-react";
 import Link from "next/link";
 
 import type { AppAccess } from "@/lib/auth";
-import { requiredPlan } from "@/lib/env";
 import { siteConfig } from "@/lib/site";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 export function AccessGate({ access }: { access: AppAccess }) {
-  const isBilling = access.status === "needs-plan";
   const isRejected = access.status === "rejected";
-  const Icon = isBilling ? CreditCard : isRejected ? ShieldX : Hourglass;
+  const Icon = isRejected ? ShieldX : Hourglass;
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-muted/30 px-4 py-12">
@@ -21,26 +19,15 @@ export function AccessGate({ access }: { access: AppAccess }) {
           </div>
           <div>
             <Badge variant={isRejected ? "destructive" : "secondary"}>
-              {isBilling
-                ? "Subscription required"
-                : isRejected
-                  ? "Access denied"
-                  : "Waitlist pending"}
+              {isRejected
+                ? "Access denied"
+                : "Waitlist pending"}
             </Badge>
-            <h1 className="mt-3 text-2xl font-semibold tracking-tight">
-              {isBilling
-                ? `The ${requiredPlan} plan is required`
-                : isRejected
-                  ? "This workspace is not approved"
-                  : "Wait indefinitely or subscribe now"}
-            </h1>
+           
           </div>
         </div>
         <div className="mt-6 flex flex-col gap-2 sm:flex-row">
-          <Button asChild>
-            <Link href="/pricing">Pay for access now</Link>
-          </Button>
-          {!isBilling && !isRejected ? (
+          {!isRejected ? (
             <Button asChild variant="secondary">
               <Link href="/waitlist">Wait indefinitely</Link>
             </Button>

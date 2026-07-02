@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
       {
         id: link._id,
         slug: link.slug,
-        url: `https://${siteConfig.shortDomain.replace(/\/$/, "")}/${link.slug}`,
+        url: `https://execv.xyz/${link.slug}`,
         destination: link.destination,
         createdAt: link.createdAt,
       },

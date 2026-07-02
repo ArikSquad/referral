@@ -13,7 +13,7 @@ export default function DashboardPage() {
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">Overview</h1>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
-            Create short links, issue API keys, and track clicks for {siteConfig.shortDomain}.
+            Create short links, issue API keys, and track clicks for execv.
           </p>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row">

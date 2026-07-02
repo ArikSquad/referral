@@ -1,8 +1,7 @@
 import Link from "next/link";
 
-import { WaitlistPanel } from "@/components/auth/auth-actions";
-import { Button } from "@/components/ui/button";
 import { siteConfig } from "@/lib/site";
+import { Waitlist } from "@clerk/nextjs";
 
 export const metadata = {
   title: "Waitlist",
@@ -15,9 +14,6 @@ export default function WaitlistPage() {
         <Link href="/" className="font-semibold">
           {siteConfig.name}
         </Link>
-        <Button asChild variant="outline">
-          <Link href="/pricing">Pricing</Link>
-        </Button>
       </div>
       <section className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
         <div>
@@ -27,14 +23,11 @@ export default function WaitlistPage() {
           <p className="mt-5 max-w-xl text-base leading-7 text-muted-foreground">
             Joining the waitlist does not guarantee access or a launch date. If
             we ever release a free tier, waitlist requests may be reviewed then.
-            Paid access can unlock the app now, and access may be terminated
-            after a subscription ends if product policy requires it.
+            Currently, you can only gain access by donating at https://ko-fi.com/ariksquad
+            and contacting us at Discord with username @ariksquad.
           </p>
-          <Button asChild className="mt-6">
-            <Link href="/pricing">Pay for access now</Link>
-          </Button>
         </div>
-        <WaitlistPanel />
+        <Waitlist />
       </section>
     </main>
   );

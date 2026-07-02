@@ -1,4 +1,4 @@
-import { InlineSignUp } from "@/components/auth/auth-actions";
+import { SignUp } from "@clerk/nextjs";
 
 export const metadata = {
   title: "Request access",
@@ -7,7 +7,7 @@ export const metadata = {
 export default function SignUpPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-muted/30 px-4 py-12">
-      <InlineSignUp />
+      <SignUp routing="path" path="/sign-up" signInUrl="/sign-in" />
     </main>
   );
 }

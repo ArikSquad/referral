@@ -46,7 +46,7 @@ export function AppShell({
               {siteConfig.name}
             </Link>
             <p className="text-xs text-muted-foreground">
-              {siteConfig.shortDomain}
+              execv.xyz
             </p>
           </div>
         </div>

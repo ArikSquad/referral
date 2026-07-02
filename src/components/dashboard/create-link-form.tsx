@@ -31,11 +31,7 @@ function userFacingMutationError(err: unknown) {
   ) {
     return "Sign in to create links.";
   }
-
-  if (err.message.includes("Approved account required")) {
-    return "A paid account is required to create links.";
-  }
-
+  
   return err.message;
 }
 
@@ -121,7 +117,7 @@ function CreateLinkShell({
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const normalizedSlug = slugify(slug);
-  const shortUrl = `https://${siteConfig.shortDomain}/${normalizedSlug || "abc1234"}`;
+  const shortUrl = `https://execv.xyz/${normalizedSlug || "abc1234"}`;
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

@@ -75,7 +75,7 @@ export function LinkTable({
                     </Button>
                   </div>
                   <p className="mt-1 truncate text-sm text-muted-foreground">
-                    {siteConfig.shortDomain}/{link.slug}
+                    execv.xyz/{link.slug}
                   </p>
                 </div>
               </TableCell>

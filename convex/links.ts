@@ -14,29 +14,6 @@ type CreateLinkArgs = {
   destination: string;
 };
 
-async function requireWritableCurrentUser(ctx: MutationCtx) {
-  const identity = await ctx.auth.getUserIdentity();
-  if (!identity) {
-    throw new Error("Authentication required");
-  }
-
-    console.log("identity: %o", identity);
-
-  const claims = identity as unknown as {
-    email?: string;
-    name?: string;
-    nickname?: string;
-    publicMetadata?: { approvalStatus?: "pending" | "approved" | "rejected" };
-  };
-  const approvalStatus = claims.publicMetadata?.approvalStatus ?? "approved";
-
-  if (approvalStatus !== "approved") {
-    throw new Error("Approved account required");
-  }
-
-  return identity;
-}
-
 function normalizeSlug(slug: string) {
   return slug
     .trim()
