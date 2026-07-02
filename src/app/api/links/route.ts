@@ -56,29 +56,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const client = await clerkClient();
-    const [user, organization] = await Promise.all([
-      session.userId ? client.users.getUser(session.userId) : null,
-      session.orgId
-        ? client.organizations.getOrganization({
-            organizationId: session.orgId,
-          })
-        : null,
-    ]);
-    const metadata = user?.publicMetadata as { role?: string } | undefined;
-    const claims = session.claims as { role?: string } | null;
-    const namespace =
-      organization?.slug ??
-      user?.username ??
-      user?.firstName ??
-      session.userId ??
-      subjectId;
     const link = await convex.mutation(api.links.createFromApi, {
       clerkUserId: subjectId,
-      email: user?.emailAddresses.at(0)?.emailAddress,
-      ownerName: organization?.name ?? user?.fullName ?? user?.username ?? undefined,
-      namespace,
-      isStaff: metadata?.role === "staff" || claims?.role === "staff",
       name: body.name,
       slug: body.slug,
       destination,
