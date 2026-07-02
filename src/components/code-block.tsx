@@ -1,4 +1,4 @@
-import { BundledLanguage, codeToHtml } from "shiki"
+import { BundledLanguage, codeToHtml } from 'shiki'
 
 interface Props {
     children: string
@@ -6,8 +6,8 @@ interface Props {
 }
 
 export async function CodeBlock(props: Props) {
-    "use cache"
-    
+    'use cache'
+
     const out = await codeToHtml(props.children, {
         lang: props.lang,
         theme: 'material-theme-ocean',

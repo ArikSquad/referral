@@ -21,7 +21,6 @@ export function AppShell({
     children: ReactNode
     access: AppAccess
 }) {
-
     return (
         <div className="min-h-screen bg-background text-foreground">
             <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 border-r bg-background lg:block">
@@ -132,13 +131,13 @@ export function AppShell({
 }
 
 function AppShellAuthControl() {
-    return <UserButton
+    return (
+        <UserButton
             appearance={{
                 elements: {
                     avatarBox: 'size-8'
                 }
             }}
         />
+    )
 }
-
-

@@ -10,6 +10,7 @@
         "prettier": "prettier --write . --ignore-path .gitignore"
     },
     "dependencies": {
+        "@base-ui/react": "^1.6.0",
         "@clerk/nextjs": "^7.5.12",
         "@posthog/react": "^1.10.3",
         "@radix-ui/react-avatar": "^1.2.1",
@@ -22,10 +23,15 @@
         "@radix-ui/react-switch": "^1.3.2",
         "@radix-ui/react-tabs": "^1.1.16",
         "@radix-ui/react-tooltip": "^1.2.11",
+        "@shadcn/react": "^0.2.0",
         "babel-plugin-react-compiler": "^1.0.0",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
+        "cmdk": "^1.1.1",
         "convex": "^1.42.1",
+        "date-fns": "^4.4.0",
+        "embla-carousel-react": "^8.6.0",
+        "input-otp": "^1.4.2",
         "lucide-react": "^1.23.0",
         "next": "v16.3.0-canary.75",
         "next-themes": "^0.4.6",
@@ -33,10 +39,14 @@
         "posthog-node": "^5.39.4",
         "radix-ui": "^1.6.1",
         "react": "19.2.7",
+        "react-day-picker": "^10.0.1",
         "react-dom": "19.2.7",
-        "recharts": "^3.9.1",
+        "react-resizable-panels": "^4.12.0",
+        "recharts": "3.8.0",
+        "sonner": "^2.0.7",
         "tailwind-merge": "^3.6.0",
-        "tw-animate-css": "^1.4.0"
+        "tw-animate-css": "^1.4.0",
+        "vaul": "^1.1.2"
     },
     "devDependencies": {
         "@tailwindcss/postcss": "^4",

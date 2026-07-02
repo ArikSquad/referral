@@ -1,9 +1,4 @@
-import {
-    BarChart3,
-    KeyRound,
-    Link2,
-    TerminalSquare
-} from 'lucide-react'
+import { BarChart3, KeyRound, Link2, TerminalSquare } from 'lucide-react'
 import Link from 'next/link'
 import { AuthNavActions } from '@/components/auth/auth-actions'
 import { Button } from '@/components/ui/button'
