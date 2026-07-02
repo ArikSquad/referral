@@ -1,7 +1,6 @@
 import Link from "next/link";
 
-import { LinkTable } from "@/components/dashboard/link-table";
-import { Badge } from "@/components/ui/badge";
+import { LinksPanel } from "@/components/dashboard/links-panel";
 import { Button } from "@/components/ui/button";
 import { managedLinks } from "@/lib/site";
 
@@ -26,7 +25,7 @@ export default function LinksPage() {
           <Link href="/app/links/new">New link</Link>
         </Button>
       </section>
-      <LinkTable links={managedLinks} />
+      <LinksPanel fallback={managedLinks} />
     </>
   );
 }

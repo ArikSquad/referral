@@ -51,6 +51,8 @@ export default defineSchema({
     clicks: v.number(),
     conversions: v.number(),
     revenueCents: v.number(),
+    startsAt: v.optional(v.number()),
+    expiresAt: v.optional(v.number()),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -60,11 +62,7 @@ export default defineSchema({
 
   affiliateIntegrations: defineTable({
     ownerId: v.id("users"),
-    provider: v.union(
-      v.literal("amazon-associates"),
-      v.literal("custom-webhook"),
-      v.literal("partner-network")
-    ),
+    provider: v.string(),
     name: v.string(),
     status: v.union(
       v.literal("draft"),

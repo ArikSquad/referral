@@ -64,28 +64,40 @@ export const record = mutation({
     }
 
     const country = args.country?.trim().toUpperCase();
+    const now = Date.now();
     const allowCountries = link.allowCountries ?? [];
     const blockedCountries = link.blockedCountries ?? [];
+    const linkStarted = !link.startsAt || link.startsAt <= now;
+    const linkNotExpired = !link.expiresAt || link.expiresAt >= now;
     const countryAllowed =
       !country ||
       (allowCountries.length === 0 || allowCountries.includes(country)) &&
         !blockedCountries.includes(country);
     const keyAllowed =
       !link.accessKeyHash || link.accessKeyHash === args.accessKey;
-    const accepted = link.status === "live" && countryAllowed && keyAllowed;
+    const accepted =
+      link.status === "live" &&
+      linkStarted &&
+      linkNotExpired &&
+      countryAllowed &&
+      keyAllowed;
     const blockedReason =
       link.status !== "live"
         ? `link_${link.status}`
-        : !countryAllowed
-          ? "country_blocked"
-          : !keyAllowed
-            ? "access_key_required"
-            : undefined;
+        : !linkStarted
+          ? "link_not_started"
+          : !linkNotExpired
+            ? "link_expired"
+            : !countryAllowed
+              ? "country_blocked"
+              : !keyAllowed
+                ? "access_key_required"
+                : undefined;
 
     await ctx.db.insert("clicks", {
       linkId: link._id,
       slug: args.slug,
-      ts: Date.now(),
+      ts: now,
       referrer: args.referrer,
       userAgent: args.userAgent,
       country,
@@ -96,7 +108,7 @@ export const record = mutation({
 
     await ctx.db.patch(link._id, {
       clicks: link.clicks + 1,
-      updatedAt: Date.now(),
+      updatedAt: now,
     });
 
     return {

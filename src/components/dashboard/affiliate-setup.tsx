@@ -55,10 +55,7 @@ function ConnectedAffiliateSetup() {
 
     try {
       await saveIntegration({
-        provider: form.get("provider") as
-          | "amazon-associates"
-          | "custom-webhook"
-          | "partner-network",
+        provider: String(form.get("provider") ?? "custom-webhook"),
         name: String(form.get("integrationName") ?? "Affiliate network"),
         trackingId: optionalString(form.get("trackingId")),
         marketplace: optionalString(form.get("marketplace")),

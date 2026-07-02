@@ -32,6 +32,7 @@ export type ManagedLink = {
   slug: string;
   destination: string;
   owner: string;
+  status: "review" | "live" | "paused" | "blocked";
   mode: LinkMode;
   allowlist: string[];
   clicks: number;
@@ -44,6 +45,8 @@ export type ManagedLink = {
   accessKeyRequired?: boolean;
   affiliateNetwork?: string;
   affiliateStatus?: "not_connected" | "pending" | "connected" | "error";
+  startsAt?: number;
+  expiresAt?: number;
 };
 
 export const managedLinks: ManagedLink[] = [];
@@ -88,7 +91,85 @@ export const affiliateNetworks = [
     ],
   },
   {
-    id: "custom",
+    id: "impact",
+    name: "Impact",
+    status: "available",
+    fields: ["Account SID", "Campaign", "API credentials", "Webhook URL"],
+  },
+  {
+    id: "partnerstack",
+    name: "PartnerStack",
+    status: "available",
+    fields: ["Partner key", "Campaign", "Webhook URL"],
+  },
+  {
+    id: "shareasale",
+    name: "ShareASale",
+    status: "available",
+    fields: ["Affiliate ID", "Merchant ID", "API token"],
+  },
+  {
+    id: "cj-affiliate",
+    name: "CJ Affiliate",
+    status: "available",
+    fields: ["Publisher ID", "Website ID", "Personal access token"],
+  },
+  {
+    id: "rakuten-advertising",
+    name: "Rakuten Advertising",
+    status: "available",
+    fields: ["Publisher ID", "Advertiser ID", "API token"],
+  },
+  {
+    id: "awin",
+    name: "Awin",
+    status: "available",
+    fields: ["Publisher ID", "Advertiser ID", "OAuth token"],
+  },
+  {
+    id: "clickbank",
+    name: "ClickBank",
+    status: "available",
+    fields: ["Nickname", "Tracking ID", "API key"],
+  },
+  {
+    id: "rewardful",
+    name: "Rewardful",
+    status: "available",
+    fields: ["Campaign ID", "API secret", "Webhook secret"],
+  },
+  {
+    id: "firstpromoter",
+    name: "FirstPromoter",
+    status: "available",
+    fields: ["Campaign ID", "API key", "Webhook secret"],
+  },
+  {
+    id: "tapfiliate",
+    name: "Tapfiliate",
+    status: "available",
+    fields: ["Program ID", "API key", "Webhook URL"],
+  },
+  {
+    id: "lemonsqueezy",
+    name: "Lemon Squeezy",
+    status: "available",
+    fields: ["Store ID", "Variant ID", "Signing secret"],
+  },
+  {
+    id: "paddle",
+    name: "Paddle",
+    status: "available",
+    fields: ["Vendor ID", "Product ID", "Webhook secret"],
+  },
+  {
+    id: "stripe",
+    name: "Stripe referrals",
+    status: "available",
+    fields: ["Account ID", "Promotion code", "Webhook secret"],
+  },
+  {
+    id: "custom-webhook",
     name: "Custom partner network",
     status: "webhook",
     fields: ["Webhook URL", "Signing secret", "Revenue event mapping"],

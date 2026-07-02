@@ -8,7 +8,7 @@ import {
   type QueryCtx,
 } from "./_generated/server";
 
-type Provider = "amazon-associates" | "custom-webhook" | "partner-network";
+type Provider = string;
 
 async function requireCurrentUser(ctx: QueryCtx | MutationCtx) {
   const identity = await ctx.auth.getUserIdentity();
@@ -44,11 +44,7 @@ export const listMine = query({
 export const save = mutation({
   args: {
     integrationId: v.optional(v.id("affiliateIntegrations")),
-    provider: v.union(
-      v.literal("amazon-associates"),
-      v.literal("custom-webhook"),
-      v.literal("partner-network")
-    ),
+    provider: v.string(),
     name: v.string(),
     trackingId: v.optional(v.string()),
     marketplace: v.optional(v.string()),
