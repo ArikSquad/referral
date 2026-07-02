@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: `${siteConfig.name} - Developer URL shortener`,
     description: siteConfig.description,
-    images: ["/gatelink-dashboard-hero.png"],
+    images: ["/banner.png"],
   },
 };
 
