@@ -7,11 +7,11 @@ import {
 
 export const siteConfig = {
   name: "execv",
-  tagline: "Paid URL shortener for developers.",
+  tagline: "URL shortener for developers.",
   description:
     "execv helps developers create short links from a dashboard or API and track clicks without running redirect infrastructure.",
-  url: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
-  shortDomain: process.env.NEXT_PUBLIC_SHORT_DOMAIN ?? "example.com",
+  url: process.env.NEXT_PUBLIC_APP_URL!,
+  shortDomain: process.env.NEXT_PUBLIC_SHORT_DOMAIN!,
 };
 
 export type ManagedLink = {

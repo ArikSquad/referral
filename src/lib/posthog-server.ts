@@ -13,7 +13,7 @@ export function getServerPostHog() {
 
   if (!posthog) {
     posthog = new PostHog(key, {
-      host: process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://us.i.posthog.com",
+      host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
       flushAt: 1,
       flushInterval: 0,
     });
