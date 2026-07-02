@@ -147,6 +147,38 @@ function buildTrackedPreview(destination: string, mode: LinkMode, slug: string, 
   }
 }
 
+function userFacingMutationError(err: unknown, fallback: string) {
+  if (!(err instanceof Error)) {
+    return fallback;
+  }
+
+  if (
+    err.message.includes("Authentication required") ||
+    err.message.includes("Unauthenticated")
+  ) {
+    return "Sign in to create live links.";
+  }
+
+  if (err.message.includes("Approved account required")) {
+    return "Your account needs workspace approval before creating links.";
+  }
+
+  if (err.message.includes("Application staff required")) {
+    return "Your account does not have access to that action.";
+  }
+
+  if (
+    err.message.includes("Destination must") ||
+    err.message.includes("Expiration date") ||
+    err.message.includes("Slug") ||
+    err.message.includes("Could not allocate")
+  ) {
+    return err.message;
+  }
+
+  return fallback;
+}
+
 function CountrySelect({
   label,
   value,
@@ -238,8 +270,19 @@ function ConnectedCreateLinkForm() {
   const router = useRouter();
   const [status, setStatus] = useState<"idle" | "saving" | "error">("idle");
   const [error, setError] = useState("");
+  const disabledReason = auth.isLoading
+    ? "Checking sign-in status."
+    : auth.isAuthenticated
+      ? undefined
+      : "Sign in to create live links.";
 
   async function onSubmit(payload: LinkPayload) {
+    if (!auth.isAuthenticated) {
+      setError("Sign in to create live links.");
+      setStatus("error");
+      return;
+    }
+
     setStatus("saving");
     setError("");
 
@@ -248,12 +291,18 @@ function ConnectedCreateLinkForm() {
       router.push("/app/links");
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Link could not be created.");
+      setError(userFacingMutationError(err, "Link could not be created. Check your workspace access and try again."));
       setStatus("error");
     }
   }
 
   async function onCreateCollection(payload: CollectionPayload) {
+    if (!auth.isAuthenticated) {
+      setError("Sign in to create live links.");
+      setStatus("error");
+      return;
+    }
+
     setStatus("saving");
     setError("");
 
@@ -262,7 +311,12 @@ function ConnectedCreateLinkForm() {
       router.push("/app/links");
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Collection could not be created.");
+      setError(
+        userFacingMutationError(
+          err,
+          "Collection could not be created. Check your workspace access and try again."
+        )
+      );
       setStatus("error");
     }
   }
@@ -288,6 +342,7 @@ function ConnectedCreateLinkForm() {
       onCreateCollection={onCreateCollection}
       status={status}
       error={error}
+      disabledReason={disabledReason}
     />
   );
 }
