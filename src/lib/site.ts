@@ -50,6 +50,5 @@ export const redirectTargets = new Map(
 export const navItems = [
     { label: 'Overview', href: '/app', icon: Activity },
     { label: 'Links', href: '/app/links', icon: Link2 },
-    { label: 'API keys', href: '/app/api-keys', icon: KeyRound },
-    { label: 'Analytics', href: '/app/analytics', icon: Globe2 }
+    { label: 'API keys', href: '/app/api-keys', icon: KeyRound }
 ]
