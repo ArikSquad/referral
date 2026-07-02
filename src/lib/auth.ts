@@ -3,7 +3,7 @@ import "server-only";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
-import { hasHostedAuthServerEnv, requiredPlan } from "@/lib/env";
+import { requiredPlan } from "@/lib/env";
 
 export type AppAccess =
   | {

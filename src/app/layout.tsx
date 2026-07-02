@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
-import { AppProviders } from "@/components/providers/app-providers";
 import { siteConfig } from "@/lib/site";
 
 import "./globals.css";
+import { ThemeProvider } from "next-themes";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { ConvexClientProvider } from "@/lib/convex-client";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,12 +21,12 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   title: {
-    default: `${siteConfig.name} - Whitelist-first referral links`,
+    default: `${siteConfig.name} - Developer URL shortener`,
     template: `%s - ${siteConfig.name}`,
   },
   description: siteConfig.description,
   openGraph: {
-    title: `${siteConfig.name} - Whitelist-first referral links`,
+    title: `${siteConfig.name} - Developer URL shortener`,
     description: siteConfig.description,
     images: ["/gatelink-dashboard-hero.png"],
   },
@@ -42,7 +44,18 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full">
-        <AppProviders>{children}</AppProviders>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <TooltipProvider>
+            <ConvexClientProvider>
+              {children}
+            </ConvexClientProvider>
+          </TooltipProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

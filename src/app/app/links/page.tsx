@@ -17,8 +17,7 @@ export default function LinksPage() {
             Managed short links
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-            Referral, campaign, internal, and private links with approval and
-            allowlist rules attached.
+            Dashboard-created and API-created URLs with click tracking.
           </p>
         </div>
         <Button asChild>

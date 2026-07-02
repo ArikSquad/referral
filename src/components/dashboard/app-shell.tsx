@@ -98,7 +98,7 @@ export function AppShell({
                     <Bell className="size-4" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>Approval and risk alerts</TooltipContent>
+                <TooltipContent>Product updates</TooltipContent>
               </Tooltip>
               <Button asChild className="hidden sm:inline-flex">
                 <Link href="/app/links/new">

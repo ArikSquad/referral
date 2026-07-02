@@ -8,9 +8,7 @@
  * @module
  */
 
-import type * as affiliateIntegrations from "../affiliateIntegrations.js";
 import type * as clicks from "../clicks.js";
-import type * as collections from "../collections.js";
 import type * as links from "../links.js";
 import type * as users from "../users.js";
 
@@ -21,9 +19,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
-  affiliateIntegrations: typeof affiliateIntegrations;
   clicks: typeof clicks;
-  collections: typeof collections;
   links: typeof links;
   users: typeof users;
 }>;

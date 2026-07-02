@@ -12,7 +12,6 @@ type RecordClickArgs = {
   referrer?: string;
   userAgent?: string;
   country?: string;
-  accessKey?: string;
 };
 
 async function requireCurrentUser(ctx: QueryCtx | MutationCtx) {
@@ -31,18 +30,7 @@ async function requireCurrentUser(ctx: QueryCtx | MutationCtx) {
     throw new Error("Approved account required");
   }
 
-  const claims = identity as unknown as {
-    publicMetadata?: { role?: string };
-    organization_role?: string;
-    org_role?: string;
-  };
-  const role =
-    claims.publicMetadata?.role ?? claims.organization_role ?? claims.org_role;
-
-  return {
-    user,
-    isAdmin: ["admin", "org:admin"].includes(role ?? ""),
-  };
+  return user;
 }
 
 export const record = mutation({
@@ -51,7 +39,6 @@ export const record = mutation({
     referrer: v.optional(v.string()),
     userAgent: v.optional(v.string()),
     country: v.optional(v.string()),
-    accessKey: v.optional(v.string()),
   },
   handler: async (ctx: MutationCtx, args: RecordClickArgs) => {
     const link = await ctx.db
@@ -63,60 +50,43 @@ export const record = mutation({
       return { accepted: false, reason: "unknown_slug" };
     }
 
-    const country = args.country?.trim().toUpperCase();
     const now = Date.now();
-    const allowCountries = link.allowCountries ?? [];
-    const blockedCountries = link.blockedCountries ?? [];
-    const linkStarted = !link.startsAt || link.startsAt <= now;
-    const linkNotExpired = !link.expiresAt || link.expiresAt >= now;
-    const countryAllowed =
-      !country ||
-      (allowCountries.length === 0 || allowCountries.includes(country)) &&
-        !blockedCountries.includes(country);
-    const keyAllowed =
-      !link.accessKeyHash || link.accessKeyHash === args.accessKey;
-    const accepted =
-      link.status === "live" &&
-      linkStarted &&
-      linkNotExpired &&
-      countryAllowed &&
-      keyAllowed;
-    const blockedReason =
-      link.status !== "live"
-        ? `link_${link.status}`
-        : !linkStarted
-          ? "link_not_started"
-          : !linkNotExpired
-            ? "link_expired"
-            : !countryAllowed
-              ? "country_blocked"
-              : !keyAllowed
-                ? "access_key_required"
-                : undefined;
+    const accepted = link.status === "live";
 
     await ctx.db.insert("clicks", {
       linkId: link._id,
+      ownerId: link.ownerId,
       slug: args.slug,
       ts: now,
       referrer: args.referrer,
       userAgent: args.userAgent,
-      country,
-      accepted,
-      blockedReason,
-      affiliateNetwork: link.affiliateNetwork,
+      country: args.country?.trim().toUpperCase(),
     });
 
     await ctx.db.patch(link._id, {
       clicks: link.clicks + 1,
+      lastClickedAt: now,
       updatedAt: now,
     });
 
     return {
       accepted,
-      reason: blockedReason,
+      reason: accepted ? undefined : "link_paused",
       destination: accepted ? link.destination : undefined,
-      affiliateStatus: link.affiliateStatus ?? "not_connected",
     };
+  },
+});
+
+export const recentMine = query({
+  args: {},
+  handler: async (ctx: QueryCtx) => {
+    const user = await requireCurrentUser(ctx);
+
+    return await ctx.db
+      .query("clicks")
+      .withIndex("by_owner_ts", (q) => q.eq("ownerId", user._id))
+      .order("desc")
+      .take(250);
   },
 });
 
@@ -125,33 +95,33 @@ export const recent = query({
     slug: v.optional(v.string()),
   },
   handler: async (ctx: QueryCtx, args: { slug?: string }) => {
-    const { user, isAdmin } = await requireCurrentUser(ctx);
+    const user = await requireCurrentUser(ctx);
 
-    if (args.slug) {
-      const link = await ctx.db
-        .query("links")
-        .withIndex("by_slug", (q) => q.eq("slug", args.slug as string))
-        .unique();
-
-      if (!link) {
-        return [];
-      }
-
-      if (!isAdmin && link.ownerId !== user._id) {
-        throw new Error("Link owner or workspace admin required");
-      }
-
+    if (!args.slug) {
       return await ctx.db
         .query("clicks")
-        .withIndex("by_slug_ts", (q) => q.eq("slug", args.slug as string))
+        .withIndex("by_owner_ts", (q) => q.eq("ownerId", user._id))
         .order("desc")
         .take(100);
     }
 
-    if (!isAdmin) {
-      throw new Error("Workspace admin required");
+    const link = await ctx.db
+      .query("links")
+      .withIndex("by_slug", (q) => q.eq("slug", args.slug as string))
+      .unique();
+
+    if (!link) {
+      return [];
     }
 
-    return await ctx.db.query("clicks").order("desc").take(100);
+    if (link.ownerId !== user._id) {
+      throw new Error("Link owner required");
+    }
+
+    return await ctx.db
+      .query("clicks")
+      .withIndex("by_slug_ts", (q) => q.eq("slug", args.slug as string))
+      .order("desc")
+      .take(100);
   },
 });

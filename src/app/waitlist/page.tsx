@@ -1,7 +1,6 @@
 import Link from "next/link";
 
 import { WaitlistPanel } from "@/components/auth/auth-actions";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { siteConfig } from "@/lib/site";
 

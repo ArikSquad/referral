@@ -44,7 +44,7 @@ function HostedAuthNavActions() {
             <Button variant="ghost">Sign in</Button>
           </SignInButton>
           <SignUpButton mode="modal" forceRedirectUrl="/app">
-            <Button>Request access</Button>
+            <Button>Get started</Button>
           </SignUpButton>
         </>
       ) : null}
@@ -91,8 +91,7 @@ export function InlineSignUp() {
       <div className="mx-auto flex max-w-md flex-col gap-4 rounded-lg border bg-card p-6 text-card-foreground shadow-sm">
         <h1 className="text-2xl font-semibold">Demo request access</h1>
         <p className="text-sm leading-6 text-muted-foreground">
-          Configure hosted signups, waitlists, and billing entitlements in this
-          screen.
+          Configure hosted signups and billing entitlements in this screen.
         </p>
         <Button asChild>
           <Link href="/waitlist">View waitlist flow</Link>
@@ -134,8 +133,8 @@ export function BillingPanel() {
       <div className="grid gap-4 md:grid-cols-3">
         {[
           ["Operator", "$49", "Unlock access without waiting"],
-          ["Scale", "$149", "For teams with approvals and analytics"],
-          ["Enterprise", "Custom", "For strict compliance workflows"],
+          ["Scale", "$149", "For teams creating links from backend services"],
+          ["Enterprise", "Custom", "For higher limits and dedicated support"],
         ].map(([name, price, detail]) => (
           <div
             key={name}

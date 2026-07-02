@@ -9,19 +9,9 @@ import {
 } from "./_generated/server";
 
 type CreateLinkArgs = {
-  name: string;
+  name?: string;
   slug?: string;
   destination: string;
-  mode: "Whitelist" | "Referral" | "Campaign" | "Internal";
-  allowlist: string[];
-  allowCountries?: string[];
-  blockedCountries?: string[];
-  accessKey?: string;
-  affiliateIntegrationId?: Id<"affiliateIntegrations">;
-  affiliateNetwork?: string;
-  affiliateAccountId?: string;
-  startsAt?: number;
-  expiresAt?: number;
 };
 
 async function getExistingCurrentUser(ctx: QueryCtx | MutationCtx) {
@@ -38,32 +28,13 @@ async function getExistingCurrentUser(ctx: QueryCtx | MutationCtx) {
 }
 
 async function requireCurrentUser(ctx: QueryCtx | MutationCtx) {
-  const identity = await ctx.auth.getUserIdentity();
+  const user = await getExistingCurrentUser(ctx);
 
-  if (!identity) {
-    throw new Error("Authentication required");
-  }
-
-  const existing = await getExistingCurrentUser(ctx);
-
-  const claims = identity as unknown as {
-    email?: string;
-    name?: string;
-    nickname?: string;
-    publicMetadata?: { approvalStatus?: "pending" | "approved" | "rejected" };
-  };
-  const approvalStatus =
-    existing?.approvalStatus ?? claims.publicMetadata?.approvalStatus ?? "approved";
-
-  if (approvalStatus !== "approved") {
+  if (!user || user.approvalStatus !== "approved") {
     throw new Error("Approved account required");
   }
 
-  if (existing) {
-    return existing;
-  }
-
-  throw new Error("Approved account required");
+  return user;
 }
 
 async function requireWritableCurrentUser(ctx: MutationCtx) {
@@ -74,21 +45,25 @@ async function requireWritableCurrentUser(ctx: MutationCtx) {
   }
 
   const existing = await getExistingCurrentUser(ctx);
+
+  if (existing) {
+    if (existing.approvalStatus !== "approved") {
+      throw new Error("Approved account required");
+    }
+
+    return existing;
+  }
+
   const claims = identity as unknown as {
     email?: string;
     name?: string;
     nickname?: string;
     publicMetadata?: { approvalStatus?: "pending" | "approved" | "rejected" };
   };
-  const approvalStatus =
-    existing?.approvalStatus ?? claims.publicMetadata?.approvalStatus ?? "approved";
+  const approvalStatus = claims.publicMetadata?.approvalStatus ?? "approved";
 
   if (approvalStatus !== "approved") {
     throw new Error("Approved account required");
-  }
-
-  if (existing) {
-    return existing;
   }
 
   const now = Date.now();
@@ -100,7 +75,6 @@ async function requireWritableCurrentUser(ctx: MutationCtx) {
     createdAt: now,
     updatedAt: now,
   });
-
   const user = await ctx.db.get(userId);
 
   if (!user) {
@@ -108,39 +82,6 @@ async function requireWritableCurrentUser(ctx: MutationCtx) {
   }
 
   return user;
-}
-
-async function isApplicationStaff(ctx: QueryCtx | MutationCtx) {
-  const identity = await ctx.auth.getUserIdentity();
-  const claims = identity as unknown as {
-    publicMetadata?: { role?: string };
-    privateMetadata?: { role?: string };
-    metadata?: { role?: string };
-    organization_role?: string;
-    org_role?: string;
-  };
-  const role =
-    claims.publicMetadata?.role ??
-    claims.privateMetadata?.role ??
-    claims.metadata?.role ??
-    claims.organization_role ??
-    claims.org_role;
-
-  return role === "staff";
-}
-
-async function requireWorkspaceAdmin(ctx: QueryCtx | MutationCtx) {
-  await requireCurrentUser(ctx);
-
-  if (!(await isApplicationStaff(ctx))) {
-    throw new Error("Application staff required");
-  }
-}
-
-function normalizeCountryList(countries?: string[]) {
-  return (countries ?? [])
-    .map((country) => country.trim().toUpperCase())
-    .filter(Boolean);
 }
 
 function normalizeSlug(slug: string) {
@@ -164,10 +105,8 @@ function randomSlug() {
 }
 
 async function reserveSlug(ctx: MutationCtx, requestedSlug?: string) {
-  const canChooseSlug = await isApplicationStaff(ctx);
-
-  if (canChooseSlug) {
-    const slug = normalizeSlug(requestedSlug ?? "");
+  if (requestedSlug) {
+    const slug = normalizeSlug(requestedSlug);
 
     if (!slug) {
       throw new Error("Slug is required");
@@ -200,10 +139,7 @@ async function reserveSlug(ctx: MutationCtx, requestedSlug?: string) {
   throw new Error("Could not allocate a short slug");
 }
 
-function normalizeDestination(
-  destination: string,
-  args: Omit<CreateLinkArgs, "slug"> & { slug: string }
-) {
+function normalizeDestination(destination: string) {
   let url: URL;
 
   try {
@@ -216,27 +152,15 @@ function normalizeDestination(
     throw new Error("Destination must use HTTP or HTTPS");
   }
 
-  const hasAffiliateTracking =
-    Boolean(args.affiliateIntegrationId) ||
-    Boolean(args.affiliateNetwork?.trim()) ||
-    Boolean(args.affiliateAccountId?.trim());
-
-  if (!hasAffiliateTracking) {
-    const defaults = {
-      utm_source: "execv",
-      utm_medium: args.mode.toLowerCase(),
-      utm_campaign: args.slug,
-      utm_content: args.name,
-    };
-
-    for (const [key, value] of Object.entries(defaults)) {
-      if (!url.searchParams.has(key)) {
-        url.searchParams.set(key, value);
-      }
-    }
-  }
-
   return url.toString();
+}
+
+function nameFromDestination(destination: string) {
+  try {
+    return new URL(destination).hostname;
+  } catch {
+    return "Short link";
+  }
 }
 
 export const listMine = query({
@@ -247,96 +171,51 @@ export const listMine = query({
     return await ctx.db
       .query("links")
       .withIndex("by_owner", (q) => q.eq("ownerId", user._id))
+      .order("desc")
       .collect();
-  },
-});
-
-export const capabilities = query({
-  args: {},
-  handler: async (ctx: QueryCtx) => {
-    await requireCurrentUser(ctx);
-
-    return {
-      canChooseSlug: await isApplicationStaff(ctx),
-    };
   },
 });
 
 export const create = mutation({
   args: {
-    name: v.string(),
+    name: v.optional(v.string()),
     slug: v.optional(v.string()),
     destination: v.string(),
-    mode: v.union(
-      v.literal("Whitelist"),
-      v.literal("Referral"),
-      v.literal("Campaign"),
-      v.literal("Internal")
-    ),
-    allowlist: v.array(v.string()),
-    allowCountries: v.optional(v.array(v.string())),
-    blockedCountries: v.optional(v.array(v.string())),
-    accessKey: v.optional(v.string()),
-    affiliateIntegrationId: v.optional(v.id("affiliateIntegrations")),
-    affiliateNetwork: v.optional(v.string()),
-    affiliateAccountId: v.optional(v.string()),
-    startsAt: v.optional(v.number()),
-    expiresAt: v.optional(v.number()),
   },
   handler: async (ctx: MutationCtx, args: CreateLinkArgs) => {
     const user = await requireWritableCurrentUser(ctx);
+    const destination = normalizeDestination(args.destination);
     const slug = await reserveSlug(ctx, args.slug);
-
     const now = Date.now();
-    let affiliateIntegration;
-
-    if (args.startsAt && args.expiresAt && args.startsAt >= args.expiresAt) {
-      throw new Error("Expiration date must be after start date");
-    }
-
-    if (args.affiliateIntegrationId) {
-      affiliateIntegration = await ctx.db.get(args.affiliateIntegrationId);
-
-      if (!affiliateIntegration || affiliateIntegration.ownerId !== user._id) {
-        throw new Error("Integration owner required");
-      }
-    }
 
     return await ctx.db.insert("links", {
       ownerId: user._id,
-      affiliateIntegrationId: args.affiliateIntegrationId,
-      name: args.name.trim(),
+      name: args.name?.trim() || nameFromDestination(destination),
       slug,
-      destination: normalizeDestination(args.destination, { ...args, slug }),
-      mode: args.mode,
-      allowlist: args.allowlist,
-      allowCountries: normalizeCountryList(args.allowCountries),
-      blockedCountries: normalizeCountryList(args.blockedCountries),
-      accessKeyHash: args.accessKey,
-      affiliateNetwork: affiliateIntegration?.provider ?? args.affiliateNetwork,
-      affiliateAccountId: affiliateIntegration?.trackingId ?? args.affiliateAccountId,
-      affiliateStatus: affiliateIntegration ? "pending" : "not_connected",
-      status: "review",
+      destination,
+      status: "live",
       clicks: 0,
-      conversions: 0,
-      revenueCents: 0,
-      startsAt: args.startsAt,
-      expiresAt: args.expiresAt,
+      createdVia: "dashboard",
       createdAt: now,
       updatedAt: now,
     });
   },
 });
 
-export const approve = mutation({
+export const pause = mutation({
   args: {
     linkId: v.id("links"),
   },
   handler: async (ctx: MutationCtx, args: { linkId: Id<"links"> }) => {
-    await requireWorkspaceAdmin(ctx);
+    const user = await requireCurrentUser(ctx);
+    const link = await ctx.db.get(args.linkId);
+
+    if (!link || link.ownerId !== user._id) {
+      throw new Error("Link owner required");
+    }
 
     await ctx.db.patch(args.linkId, {
-      status: "live",
+      status: "paused",
       updatedAt: Date.now(),
     });
   },
