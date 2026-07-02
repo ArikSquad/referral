@@ -16,10 +16,3 @@ Invite-only, whitelist-first referral and short-link management for paid SaaS wo
 bun install
 bun dev
 ```
-
-The app can run in demo mode for local review.
-
-## SaaS Configuration
-
-Deployment secrets are operator-owned. Tenant affiliate setup is stored per
-workspace through integration records, not through shared environment variables.
