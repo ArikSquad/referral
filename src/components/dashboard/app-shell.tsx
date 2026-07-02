@@ -4,7 +4,6 @@ import { UserButton, useUser } from "@clerk/nextjs";
 import {
   Bell,
   ChevronRight,
-  CircleHelp,
   Command,
   LogIn,
   Plus,
@@ -17,7 +16,6 @@ import type { AppAccess } from "@/lib/auth";
 import { navItems, siteConfig } from "@/lib/site";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/dashboard/theme-toggle";
 import {
   Tooltip,
@@ -38,9 +36,9 @@ export function AppShell({
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 border-r bg-card lg:block">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 border-r bg-background lg:block">
         <div className="flex h-16 items-center gap-3 border-b px-5">
-          <div className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+          <div className="flex size-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
             <Command className="size-4" />
           </div>
           <div>
@@ -65,8 +63,8 @@ export function AppShell({
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex h-10 items-center gap-3 rounded-lg px-3 text-sm font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground",
-                  active && "bg-muted text-foreground"
+                  "flex h-9 items-center gap-3 rounded-md px-3 text-sm font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground",
+                  active && "bg-foreground text-background hover:bg-foreground hover:text-background"
                 )}
               >
                 <Icon className="size-4" />
@@ -78,7 +76,7 @@ export function AppShell({
       </aside>
 
       <div className="lg:pl-64">
-        <header className="sticky top-0 z-30 border-b bg-background/85 backdrop-blur">
+        <header className="sticky top-0 z-30 border-b bg-background/90 backdrop-blur">
           <div className="flex h-16 items-center justify-between gap-3 px-4 sm:px-6">
             <div className="min-w-0">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">

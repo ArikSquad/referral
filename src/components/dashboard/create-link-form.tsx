@@ -117,6 +117,14 @@ function splitLines(value: string) {
     .filter(Boolean);
 }
 
+function hostLabel(url: string) {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return url;
+  }
+}
+
 function buildTrackedPreview(destination: string, mode: LinkMode, slug: string, name: string) {
   try {
     const url = new URL(destination);
@@ -225,6 +233,8 @@ function ConnectedCreateLinkForm() {
       api.affiliateIntegrations.listMine,
       auth.isAuthenticated ? {} : "skip"
     ) ?? [];
+  const existingLinks =
+    useQuery(api.links.listMine, auth.isAuthenticated ? {} : "skip") ?? [];
   const router = useRouter();
   const [status, setStatus] = useState<"idle" | "saving" | "error">("idle");
   const [error, setError] = useState("");
@@ -266,6 +276,14 @@ function ConnectedCreateLinkForm() {
         provider: integration.provider,
         trackingId: integration.trackingId,
       }))}
+      existingLinks={existingLinks.map((link) => ({
+        id: link._id,
+        name: link.name,
+        slug: link.slug,
+        destination: link.destination,
+        mode: link.mode,
+        status: link.status,
+      }))}
       onSubmit={onSubmit}
       onCreateCollection={onCreateCollection}
       status={status}
@@ -291,6 +309,7 @@ type LinkPayload = {
 };
 
 type CollectionItemPayload = {
+  linkId?: Id<"links">;
   url: string;
   title?: string;
   description?: string;
@@ -309,6 +328,7 @@ type CollectionPayload = {
 function CreateLinkShell({
   canChooseSlug = false,
   integrations = [],
+  existingLinks = [],
   onSubmit,
   onCreateCollection,
   status = "idle",
@@ -321,6 +341,14 @@ function CreateLinkShell({
     name: string;
     provider: string;
     trackingId?: string;
+  }>;
+  existingLinks?: Array<{
+    id: Id<"links">;
+    name: string;
+    slug: string;
+    destination: string;
+    mode: LinkMode;
+    status: "review" | "live" | "paused" | "blocked";
   }>;
   onSubmit?: (payload: LinkPayload) => Promise<void>;
   onCreateCollection?: (payload: CollectionPayload) => Promise<void>;
@@ -348,6 +376,9 @@ function CreateLinkShell({
   const [collectionText, setCollectionText] = useState("");
   const [collectionDescription, setCollectionDescription] = useState("");
   const [collectionItems, setCollectionItems] = useState<CollectionItemPayload[]>([]);
+  const [selectedCollectionLinkIds, setSelectedCollectionLinkIds] = useState<
+    Array<Id<"links">>
+  >([]);
   const [importing, setImporting] = useState(false);
   const [importError, setImportError] = useState("");
 
@@ -396,7 +427,7 @@ function CreateLinkShell({
           if (!response.ok) {
             return {
               url,
-              title: new URL(url).hostname,
+              title: hostLabel(url),
               metadataStatus: "failed" as const,
             };
           }
@@ -428,14 +459,25 @@ function CreateLinkShell({
           ? collectionItems
           : splitLines(collectionText).map((url) => ({
               url,
-              title: new URL(url).hostname,
+              title: hostLabel(url),
               metadataStatus: "basic" as const,
             }));
+      const linkedItems = selectedCollectionLinkIds
+        .map((linkId) => existingLinks.find((link) => link.id === linkId))
+        .filter((link): link is NonNullable<typeof link> => Boolean(link))
+        .map((link) => ({
+          linkId: link.id,
+          url: link.destination,
+          title: link.name,
+          description: `${siteConfig.shortDomain}/${link.slug}`,
+          merchant: link.mode,
+          metadataStatus: "basic" as const,
+        }));
 
       await onCreateCollection({
         name: name.trim(),
         description: collectionDescription.trim() || undefined,
-        items,
+        items: [...linkedItems, ...items],
       });
       return;
     }
@@ -603,6 +645,54 @@ function CreateLinkShell({
                     rows={2}
                   />
                 </div>
+                <div className="grid gap-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <Label>Existing referral links</Label>
+                    <span className="text-xs text-muted-foreground">
+                      {selectedCollectionLinkIds.length} selected
+                    </span>
+                  </div>
+                  {existingLinks.length > 0 ? (
+                    <div className="grid max-h-64 gap-2 overflow-auto rounded-lg border p-2">
+                      {existingLinks.map((link) => {
+                        const checked = selectedCollectionLinkIds.includes(link.id);
+
+                        return (
+                          <label
+                            key={link.id}
+                            className={cn(
+                              "grid grid-cols-[auto_1fr] gap-3 rounded-md p-2 text-sm transition-colors",
+                              checked ? "bg-muted" : "hover:bg-muted/60"
+                            )}
+                          >
+                            <Checkbox
+                              checked={checked}
+                              onCheckedChange={(value) =>
+                                setSelectedCollectionLinkIds((current) =>
+                                  value === true
+                                    ? [...current, link.id]
+                                    : current.filter((id) => id !== link.id)
+                                )
+                              }
+                            />
+                            <span className="min-w-0">
+                              <span className="block truncate font-medium">
+                                {link.name}
+                              </span>
+                              <span className="mt-1 block truncate text-xs text-muted-foreground">
+                                {siteConfig.shortDomain}/{link.slug} - {link.mode}
+                              </span>
+                            </span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="rounded-lg border bg-muted/30 p-3 text-sm text-muted-foreground">
+                      Existing links will appear here after you create them.
+                    </div>
+                  )}
+                </div>
                 <div className="grid gap-2">
                   <Label htmlFor="collectionLinks">Links to import</Label>
                   <Textarea
@@ -611,7 +701,10 @@ function CreateLinkShell({
                     onChange={(event) => setCollectionText(event.target.value)}
                     placeholder="https://store.example/product-1&#10;https://store.example/product-2"
                     rows={7}
-                    required={collectionItems.length === 0}
+                    required={
+                      collectionItems.length === 0 &&
+                      selectedCollectionLinkIds.length === 0
+                    }
                   />
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <p className="text-xs text-muted-foreground">

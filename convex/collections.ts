@@ -1,8 +1,10 @@
 import { v } from "convex/values";
 
+import type { Id } from "./_generated/dataModel";
 import { mutation, query, type MutationCtx, type QueryCtx } from "./_generated/server";
 
 type CollectionItemInput = {
+  linkId?: Id<"links">;
   url: string;
   title?: string;
   description?: string;
@@ -146,6 +148,7 @@ export const create = mutation({
     description: v.optional(v.string()),
     items: v.array(
       v.object({
+        linkId: v.optional(v.id("links")),
         url: v.string(),
         title: v.optional(v.string()),
         description: v.optional(v.string()),
@@ -187,13 +190,28 @@ export const create = mutation({
 
     await Promise.all(
       args.items.map(async (item, position) => {
-        const url = normalizeUrl(item.url);
+        let linkedShortUrl: string | undefined;
+        let linkedTitle: string | undefined;
+
+        if (item.linkId) {
+          const link = await ctx.db.get(item.linkId);
+
+          if (!link || link.ownerId !== user._id) {
+            throw new Error("Collection link owner required");
+          }
+
+          linkedShortUrl = `/${link.slug}`;
+          linkedTitle = link.name;
+        }
+
+        const url = linkedShortUrl ?? normalizeUrl(item.url);
 
         await ctx.db.insert("collectionItems", {
           collectionId,
           ownerId: user._id,
+          linkId: item.linkId,
           url,
-          title: item.title?.trim() || new URL(url).hostname,
+          title: item.title?.trim() || linkedTitle || new URL(url).hostname,
           description: item.description?.trim() || undefined,
           imageUrl: item.imageUrl?.trim() || undefined,
           price: item.price?.trim() || undefined,
@@ -227,9 +245,30 @@ export const getBySlug = query({
       .withIndex("by_collection", (q) => q.eq("collectionId", collection._id))
       .collect();
 
+    const hydratedItems = await Promise.all(
+      items.map(async (item) => {
+        if (!item.linkId) {
+          return item;
+        }
+
+        const link = await ctx.db.get(item.linkId);
+
+        if (!link || link.status !== "live") {
+          return item;
+        }
+
+        return {
+          ...item,
+          url: `/${link.slug}`,
+          title: item.title || link.name,
+          merchant: item.merchant ?? link.mode,
+        };
+      })
+    );
+
     return {
       ...collection,
-      items: items.sort((a, b) => a.position - b.position),
+      items: hydratedItems.sort((a, b) => a.position - b.position),
     };
   },
 });

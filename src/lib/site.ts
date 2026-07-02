@@ -28,12 +28,13 @@ export type LinkMode = "Whitelist" | "Referral" | "Campaign" | "Internal";
 
 export type ManagedLink = {
   id: string;
+  kind?: "link" | "collection";
   name: string;
   slug: string;
   destination: string;
   owner: string;
   status: "review" | "live" | "paused" | "blocked";
-  mode: LinkMode;
+  mode: LinkMode | "Collection";
   allowlist: string[];
   clicks: number;
   conversions: number;

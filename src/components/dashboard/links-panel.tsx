@@ -22,19 +22,41 @@ export function LinksPanel({ fallback }: { fallback: ManagedLink[] }) {
 function ConnectedLinksPanel() {
   const auth = useConvexAuth();
   const links = useQuery(api.links.listMine, auth.isAuthenticated ? {} : "skip");
+  const collections = useQuery(
+    api.collections.listMine,
+    auth.isAuthenticated ? {} : "skip"
+  );
 
-  if (links === undefined) {
+  if (links === undefined || collections === undefined) {
     return (
       <div className="rounded-lg border bg-card p-8 text-sm text-muted-foreground shadow-sm">
-        Loading links...
+        Loading links and collections...
       </div>
     );
   }
 
   return (
     <LinkTable
-      links={links.map((link) => ({
+      links={[
+        ...collections.map((collection) => ({
+          id: collection._id,
+          kind: "collection" as const,
+          name: collection.name,
+          slug: collection.slug,
+          destination: `/${collection.slug}`,
+          owner: String(collection.ownerId),
+          status: collection.status,
+          mode: "Collection" as const,
+          allowlist: [],
+          clicks: 0,
+          conversions: collection.itemCount,
+          revenue: `${collection.itemCount} items`,
+          lastClick: "No clicks yet",
+          risk: "low" as const,
+        })),
+        ...links.map((link) => ({
         id: link._id,
+        kind: "link" as const,
         name: link.name,
         slug: link.slug,
         destination: link.destination,
@@ -49,7 +71,7 @@ function ConnectedLinksPanel() {
           maximumFractionDigits: 2,
         })}`,
         lastClick: "No clicks yet",
-        risk: "low",
+        risk: "low" as const,
         allowCountries: link.allowCountries,
         blockedCountries: link.blockedCountries,
         accessKeyRequired: Boolean(link.accessKeyHash),
@@ -57,7 +79,8 @@ function ConnectedLinksPanel() {
         affiliateStatus: link.affiliateStatus,
         startsAt: link.startsAt,
         expiresAt: link.expiresAt,
-      }))}
+        })),
+      ]}
     />
   );
 }

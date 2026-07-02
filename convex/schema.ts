@@ -75,6 +75,7 @@ export default defineSchema({
   collectionItems: defineTable({
     collectionId: v.id("collections"),
     ownerId: v.id("users"),
+    linkId: v.optional(v.id("links")),
     url: v.string(),
     title: v.string(),
     description: v.optional(v.string()),

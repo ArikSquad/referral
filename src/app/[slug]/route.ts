@@ -18,6 +18,14 @@ function escapeHtml(value: string) {
     .replaceAll("'", "&#39;");
 }
 
+function displayHost(url: string) {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return "execv link";
+  }
+}
+
 function renderCollectionPage(collection: {
   name: string;
   description?: string;
@@ -39,7 +47,7 @@ function renderCollectionPage(collection: {
       return `<article class="item">
         <a class="media" href="${escapeHtml(item.url)}" rel="nofollow noopener" target="_blank">${image}</a>
         <div>
-          <p class="merchant">${escapeHtml(item.merchant ?? new URL(item.url).hostname)}</p>
+          <p class="merchant">${escapeHtml(item.merchant ?? displayHost(item.url))}</p>
           <h2><a href="${escapeHtml(item.url)}" rel="nofollow noopener" target="_blank">${escapeHtml(item.title)}</a></h2>
           ${item.description ? `<p class="description">${escapeHtml(item.description)}</p>` : ""}
           <div class="meta">

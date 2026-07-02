@@ -4,7 +4,6 @@ import Link from "next/link";
 import type { ManagedLink } from "@/lib/site";
 import { siteConfig } from "@/lib/site";
 import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -97,13 +96,15 @@ export function LinkTable({
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="size-4 text-teal-700" />
                   <span className="text-sm">{link.mode}</span>
-                  <Badge variant="outline">
+                  <span className="rounded-full border px-2 py-1 text-xs text-muted-foreground">
                     {link.allowCountries?.length
                       ? `${link.allowCountries.length} countries`
                       : "Global"}
-                  </Badge>
+                  </span>
                   {link.accessKeyRequired ? (
-                    <Badge variant="outline">Access key</Badge>
+                    <span className="rounded-full border px-2 py-1 text-xs text-muted-foreground">
+                      Access key
+                    </span>
                   ) : null}
                 </div>
               </TableCell>
