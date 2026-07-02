@@ -3,9 +3,6 @@ import { auth, clerkClient } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
 
 import { api } from '../../../../convex/_generated/api'
-import { siteConfig } from '@/lib/site'
-
-export const dynamic = 'force-dynamic'
 
 const convexUrl =
     process.env.NEXT_PUBLIC_CONVEX_URL ??

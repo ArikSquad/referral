@@ -4,8 +4,6 @@ import { fetchMutation } from 'convex/nextjs'
 import { api } from '../../../convex/_generated/api'
 import { captureServerEvent } from '@/lib/posthog-server'
 
-export const dynamic = 'force-dynamic'
-
 export async function GET(
     request: NextRequest,
     { params }: { params: Promise<{ slug: string[] }> }

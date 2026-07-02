@@ -1,47 +1,14 @@
 import {
-    ArrowRight,
     BarChart3,
     KeyRound,
     Link2,
     TerminalSquare
 } from 'lucide-react'
 import Link from 'next/link'
-import type { BundledLanguage } from 'shiki'
-import { codeToHtml } from 'shiki'
 import { AuthNavActions } from '@/components/auth/auth-actions'
 import { Button } from '@/components/ui/button'
 import { siteConfig } from '@/lib/site'
-
-interface Props {
-    children: string
-    lang: BundledLanguage
-}
-
-async function CodeBlock(props: Props) {
-    const out = await codeToHtml(props.children, {
-        lang: props.lang,
-        theme: 'material-theme-ocean',
-        // disable background:
-        transformers: [
-            {
-                name: 'remove-pre-background',
-                pre(node) {
-                    const style = String(node.properties.style ?? '')
-
-                    node.properties.style = style
-                        .split(';')
-                        .filter(
-                            (decl) =>
-                                !decl.trim().startsWith('background-color:')
-                        )
-                        .join(';')
-                }
-            }
-        ]
-    })
-
-    return <div dangerouslySetInnerHTML={{ __html: out }} />
-}
+import { CodeBlock } from '@/components/code-block'
 
 const features = [
     {

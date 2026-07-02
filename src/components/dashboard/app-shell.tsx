@@ -1,9 +1,6 @@
-'use client'
-
 import { UserButton, useUser } from '@clerk/nextjs'
 import { Bell, ChevronRight, Command, LogIn, Plus } from 'lucide-react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
 import type { ReactNode } from 'react'
 
 import type { AppAccess } from '@/lib/auth'
@@ -17,8 +14,6 @@ import {
     TooltipTrigger
 } from '@/components/ui/tooltip'
 
-const hasClerk = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY)
-
 export function AppShell({
     children,
     access
@@ -26,7 +21,6 @@ export function AppShell({
     children: ReactNode
     access: AppAccess
 }) {
-    const pathname = usePathname()
 
     return (
         <div className="min-h-screen bg-background text-foreground">
@@ -47,10 +41,7 @@ export function AppShell({
                 <nav className="grid gap-1 p-3">
                     {navItems.map((item) => {
                         const Icon = item.icon
-                        const active =
-                            item.href === '/app'
-                                ? pathname === item.href
-                                : pathname.startsWith(item.href)
+                        const active = true
 
                         return (
                             <Link
@@ -114,10 +105,7 @@ export function AppShell({
                     <div className="flex gap-1 overflow-x-auto border-t px-2 py-2 lg:hidden">
                         {navItems.map((item) => {
                             const Icon = item.icon
-                            const active =
-                                item.href === '/app'
-                                    ? pathname === item.href
-                                    : pathname.startsWith(item.href)
+                            const active = true
 
                             return (
                                 <Button
@@ -144,39 +132,13 @@ export function AppShell({
 }
 
 function AppShellAuthControl() {
-    if (!hasClerk) {
-        return (
-            <Button asChild variant="ghost" size="icon" aria-label="Sign in">
-                <Link href="/sign-in">
-                    <LogIn className="size-4" />
-                </Link>
-            </Button>
-        )
-    }
-
-    return <HostedAppShellAuthControl />
-}
-
-function HostedAppShellAuthControl() {
-    const { isLoaded, isSignedIn } = useUser()
-
-    if (!isLoaded || !isSignedIn) {
-        return (
-            <Button asChild variant="ghost" size="icon" aria-label="Sign in">
-                <Link href="/sign-in">
-                    <LogIn className="size-4" />
-                </Link>
-            </Button>
-        )
-    }
-
-    return (
-        <UserButton
+    return <UserButton
             appearance={{
                 elements: {
                     avatarBox: 'size-8'
                 }
             }}
         />
-    )
 }
+
+

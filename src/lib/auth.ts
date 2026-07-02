@@ -18,7 +18,8 @@ export async function getAppAccess(): Promise<AppAccess> {
 
     const user = await currentUser()
     const userName = user?.firstName ?? user?.username ?? 'Approved member'
-    const approvalStatus = user?.publicMetadata.approvalStatus as 'approved' | 'pending-approval' | 'rejected'
+    const approvalStatus = user?.publicMetadata.approvalStatus as
+        'approved' | 'pending-approval' | 'rejected'
 
     return {
         mode: 'clerk',

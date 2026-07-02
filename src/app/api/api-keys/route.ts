@@ -1,8 +1,6 @@
 import { auth, clerkClient } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 
-export const dynamic = 'force-dynamic'
-
 function apiKeySubject(session: Awaited<ReturnType<typeof auth>>) {
     return session.orgId ?? session.userId
 }
