@@ -107,7 +107,6 @@ export const approvalQueue: Array<{
 export const audienceRows: Array<{
   segment: string;
   members: string;
-  allowedDomains: string;
   policy: string;
 }> = [];
 

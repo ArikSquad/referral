@@ -242,27 +242,6 @@ function AffiliateSetupShell({
             ))}
           </div>
         </section>
-
-        <section className="rounded-lg border bg-card p-5 shadow-sm">
-          <h3 className="font-semibold">Connection health</h3>
-          <div className="mt-4 grid gap-3">
-            {healthItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <div
-                  key={item.label}
-                  className="flex items-center justify-between gap-3 rounded-lg border bg-background p-3"
-                >
-                  <div className="flex items-center gap-3">
-                    <Icon className="size-4 text-muted-foreground" />
-                    <span className="text-sm">{item.label}</span>
-                  </div>
-                  <Badge variant="outline">{item.value}</Badge>
-                </div>
-              );
-            })}
-          </div>
-        </section>
       </aside>
     </div>
   );

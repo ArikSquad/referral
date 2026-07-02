@@ -75,17 +75,6 @@ export function AppShell({
             );
           })}
         </nav>
-        <div className="absolute inset-x-3 bottom-3 rounded-lg border bg-background p-3">
-          <div className="flex items-center justify-between gap-3">
-            <Badge variant="secondary">
-              {access.mode === "demo" ? "Demo" : "Verified"}
-            </Badge>
-            <CircleHelp className="size-4 text-muted-foreground" />
-          </div>
-          <p className="mt-3 text-xs leading-5 text-muted-foreground">
-            {access.message}
-          </p>
-        </div>
       </aside>
 
       <div className="lg:pl-64">

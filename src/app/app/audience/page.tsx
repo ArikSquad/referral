@@ -59,7 +59,6 @@ export default function AudiencePage() {
             <TableRow>
               <TableHead>Segment</TableHead>
               <TableHead>Members</TableHead>
-              <TableHead>Allowed hosts</TableHead>
               <TableHead>Policy</TableHead>
             </TableRow>
           </TableHeader>
@@ -76,7 +75,6 @@ export default function AudiencePage() {
                 <TableRow key={row.segment}>
                   <TableCell className="font-medium">{row.segment}</TableCell>
                   <TableCell>{row.members}</TableCell>
-                  <TableCell>{row.allowedDomains}</TableCell>
                   <TableCell>{row.policy}</TableCell>
                 </TableRow>
               ))

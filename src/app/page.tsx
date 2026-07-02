@@ -83,9 +83,9 @@ export default function Home() {
                 {siteConfig.name}
               </h1>
               <p className="mt-6 max-w-2xl text-lg leading-8 text-muted-foreground sm:text-xl">
-                Governed referral links for developers and operators who need
-                paid access, country limits, team workspaces, and affiliate
-                revenue status in the same control plane.
+                Referral links for developers and operators who need
+                limitations and affiliate revenue status in the same 
+                control plane.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Button size="lg" asChild>
@@ -154,8 +154,7 @@ await affiliates.sync("amazon-associates");`}</code>
               </h2>
               <p className="mt-4 text-base leading-7 text-muted-foreground">
                 The product is built around the redirect path: resolve a link,
-                check workspace membership, enforce policy, record the
-                outcome, and sync revenue with the external partner program.
+                enforce policy, record the outcome, and sync revenue with the external partner program.
               </p>
             </div>
             <div className="grid gap-4 md:grid-cols-3">
@@ -200,22 +199,6 @@ await affiliates.sync("amazon-associates");`}</code>
                   <Link href="/waitlist">Join waitlist</Link>
                 </Button>
               </div>
-            </div>
-            <div className="grid gap-3">
-              {[
-                [LockKeyhole, "Manual approval still applies to risky workspaces."],
-                [Globe2, "Country allow and deny rules live on each referral link."],
-                [GitBranch, "Team invitations stay inside each workspace."],
-                [CheckCircle2, "Subscription state gates dashboard access."],
-              ].map(([Icon, text]) => (
-                <div
-                  key={text as string}
-                  className="flex items-center gap-3 rounded-lg border bg-background p-4"
-                >
-                  <Icon className="size-5 text-primary" />
-                  <span className="text-sm">{text as string}</span>
-                </div>
-              ))}
             </div>
           </div>
         </section>

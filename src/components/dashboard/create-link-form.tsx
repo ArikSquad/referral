@@ -22,14 +22,12 @@ export function CreateLinkForm() {
         <div className="flex items-start justify-between gap-4">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">
-              Create governed link
+              Create link
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-              Generate a clean short URL with destination allowlists, manual
-              review, and conversion tracking attached from the start.
+              Generate a clean short URL with optional conversion tracking.
             </p>
           </div>
-          <Badge variant="secondary">Whitelist default</Badge>
         </div>
 
         <div className="mt-6 grid gap-5">
@@ -69,7 +67,6 @@ export function CreateLinkForm() {
                   <SelectItem value="referral">Referral</SelectItem>
                   <SelectItem value="campaign">Campaign</SelectItem>
                   <SelectItem value="internal">Internal</SelectItem>
-                  <SelectItem value="whitelist">Whitelist only</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -121,7 +118,6 @@ export function CreateLinkForm() {
 
         <div className="mt-6 flex flex-col gap-2 sm:flex-row">
           <Button type="button">
-            <Sparkles className="size-4" />
             Generate link
           </Button>
           <Button type="button" variant="outline">

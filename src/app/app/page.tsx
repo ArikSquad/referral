@@ -22,7 +22,7 @@ export default function DashboardPage() {
       <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight">
-            Govern every short link before it moves traffic.
+            View and manage your links
           </h1>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
             Track referral performance, whitelist posture, approval work, and
