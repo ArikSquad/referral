@@ -6,12 +6,10 @@ import {
   SourceQualityChart,
 } from "@/components/dashboard/analytics-charts";
 import { LinkTable } from "@/components/dashboard/link-table";
-import { MetricCard } from "@/components/dashboard/metric-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   approvalQueue,
-  dashboardMetrics,
   managedLinks,
   siteConfig,
 } from "@/lib/site";
@@ -37,11 +35,7 @@ export default function DashboardPage() {
         </Button>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {dashboardMetrics.map((metric) => (
-          <MetricCard key={metric.label} {...metric} />
-        ))}
-      </section>
+      {/* ADD CARDS ABOUT NUMBERS, CLICKS, ETC. REVENUE */}
 
       <section className="grid gap-4 xl:grid-cols-[minmax(0,1.5fr)_minmax(360px,0.8fr)]">
         <ClickAnalyticsChart />

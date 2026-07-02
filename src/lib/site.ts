@@ -24,7 +24,6 @@ export const siteConfig = {
   shortDomain: process.env.NEXT_PUBLIC_SHORT_DOMAIN ?? "example.com",
 };
 
-export type LinkStatus = "live" | "review" | "paused" | "blocked";
 export type LinkMode = "Whitelist" | "Referral" | "Campaign" | "Internal";
 
 export type ManagedLink = {
@@ -33,7 +32,6 @@ export type ManagedLink = {
   slug: string;
   destination: string;
   owner: string;
-  status: LinkStatus;
   mode: LinkMode;
   allowlist: string[];
   clicks: number;
@@ -49,43 +47,6 @@ export type ManagedLink = {
 };
 
 export const managedLinks: ManagedLink[] = [];
-
-export const dashboardMetrics = [
-  {
-    label: "Approved links",
-    value: "0",
-    change: "Connect data",
-    icon: Link2,
-    tone: "teal",
-  },
-  {
-    label: "Verified clicks",
-    value: "0",
-    change: "No traffic",
-    icon: MousePointerClick,
-    tone: "blue",
-  },
-  {
-    label: "Conversion rate",
-    value: "0%",
-    change: "No conversions",
-    icon: BarChart3,
-    tone: "amber",
-  },
-  {
-    label: "Blocked attempts",
-    value: "0",
-    change: "No attempts",
-    icon: ShieldCheck,
-    tone: "red",
-  },
-] satisfies Array<{
-  label: string;
-  value: string;
-  change: string;
-  icon: LucideIcon;
-  tone: "teal" | "blue" | "amber" | "red";
-}>;
 
 export const clickSeries: Array<{
   day: string;
@@ -109,45 +70,6 @@ export const audienceRows: Array<{
   members: string;
   policy: string;
 }> = [];
-
-export const featureTiles = [
-  {
-    icon: LockKeyhole,
-    title: "Whitelist-first links",
-    body: "Every short link can require approved destinations, referrers, countries, teams, or invite cohorts before it resolves.",
-  },
-  {
-    icon: ClipboardCheck,
-    title: "Manual approval built in",
-    body: "Queue signups, link edits, destination changes, and new partner domains before traffic moves through them.",
-  },
-  {
-    icon: BadgeCheck,
-    title: "Paid access required",
-    body: "Subscriptions unlock the workspace while free requests can remain queued until access is available.",
-  },
-  {
-    icon: Activity,
-    title: "Attribution that operators use",
-    body: "See clicks, verified conversions, blocked attempts, source quality, and link-level revenue in one dashboard.",
-  },
-];
-
-export const workflowSteps = [
-  {
-    title: "Request access",
-    body: "Prospects join a waitlist, subscribe, and stay pending until an admin approves the account.",
-  },
-  {
-    title: "Create governed links",
-    body: "Teams generate clean suburls and attach destinations.",
-  },
-  {
-    title: "Track and tune",
-    body: "Operators monitor conversion quality, suspicious attempts, and partner performance before scaling traffic.",
-  },
-];
-
 
 export const redirectTargets = new Map(
   managedLinks.map((link) => [link.slug, link.destination])
