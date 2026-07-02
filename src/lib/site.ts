@@ -10,7 +10,7 @@ export const siteConfig = {
   tagline: "URL shortener for developers.",
   description:
     "execv helps developers create short links from a dashboard or API and track clicks without running redirect infrastructure.",
-  url: process.env.NEXT_PUBLIC_APP_URL!
+  url: "https://execv.xyz",
 };
 
 export type ManagedLink = {
