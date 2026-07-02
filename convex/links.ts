@@ -164,7 +164,6 @@ export const create = mutation({
             name: args.name?.trim() || nameFromDestination(destination),
             slug,
             destination,
-            status: 'live',
             clicks: 0,
             createdVia: 'dashboard',
             createdAt: now,
@@ -182,7 +181,6 @@ export const create = mutation({
 
 export const createFromApi = mutation({
     args: {
-        clerkUserId: v.string(),
         email: v.optional(v.string()),
         name: v.optional(v.string()),
         slug: v.optional(v.string()),
@@ -203,7 +201,6 @@ export const createFromApi = mutation({
             name: args.name?.trim() || nameFromDestination(destination),
             slug,
             destination,
-            status: 'live',
             clicks: 0,
             createdVia: 'api',
             createdAt: now,
@@ -219,13 +216,32 @@ export const createFromApi = mutation({
     }
 })
 
-export const pause = mutation({
+export const listForApi = query({
+    handler: async (ctx: QueryCtx, args) => {
+        const identity = await ctx.auth.getUserIdentity()
+
+        if (!identity) {
+            throw new Error('Authentication required')
+        }
+
+        return await ctx.db
+            .query('links')
+            .withIndex('by_owner', (q) => q.eq('ownerId', identity.subject))
+            .order('desc')
+            .collect()
+    }
+})
+
+export const getForApi = query({
     args: {
         linkId: v.id('links')
     },
-    handler: async (ctx: MutationCtx, args: { linkId: Id<'links'> }) => {
-        const identity = await ctx.auth.getUserIdentity()
+    handler: async (
+        ctx: QueryCtx,
+        args: { linkId: Id<'links'> }
+    ) => {
         const link = await ctx.db.get(args.linkId)
+        const identity = await ctx.auth.getUserIdentity()
 
         if (!identity) {
             throw new Error('Authentication required')
@@ -235,10 +251,7 @@ export const pause = mutation({
             throw new Error('Link owner required')
         }
 
-        await ctx.db.patch(args.linkId, {
-            status: 'paused',
-            updatedAt: Date.now()
-        })
+        return link
     }
 })
 
@@ -280,6 +293,70 @@ export const update = mutation({
         })
 
         return await ctx.db.get(args.linkId)
+    }
+})
+
+export const updateFromApi = mutation({
+    args: {
+        linkId: v.id('links'),
+        name: v.optional(v.string()),
+        slug: v.optional(v.string()),
+        destination: v.optional(v.string())
+    },
+    handler: async (ctx: MutationCtx, args) => {
+        const link = await ctx.db.get(args.linkId)
+        const identity = await ctx.auth.getUserIdentity()
+
+        if (!identity) {
+            throw new Error('Authentication required')
+        }
+
+        if (!link || link.ownerId !== identity.subject) {
+            throw new Error('Link owner required')
+        }
+
+        const slug = await updateSlug(ctx, args.linkId, args.slug)
+        const destination =
+            args.destination === undefined
+                ? undefined
+                : normalizeDestination(args.destination)
+        const name =
+            args.name === undefined
+                ? undefined
+                : args.name.trim() ||
+                  nameFromDestination(destination ?? link.destination)
+
+        await ctx.db.patch(args.linkId, {
+            ...(name !== undefined ? { name } : {}),
+            ...(slug !== undefined ? { slug } : {}),
+            ...(destination !== undefined ? { destination } : {}),
+            updatedAt: Date.now()
+        })
+
+        return await ctx.db.get(args.linkId)
+    }
+})
+
+export const removeFromApi = mutation({
+    args: {
+        linkId: v.id('links')
+    },
+    handler: async (
+        ctx: MutationCtx,
+        args: { linkId: Id<'links'> }
+    ) => {
+        const link = await ctx.db.get(args.linkId)
+        const identity = await ctx.auth.getUserIdentity()
+
+        if (!identity) {
+            throw new Error('Authentication required')
+        }
+
+        if (!link || link.ownerId !== identity.subject) {
+            throw new Error('Link owner required')
+        }
+
+        await ctx.db.delete(args.linkId)
     }
 })
 

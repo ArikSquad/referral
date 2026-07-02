@@ -2,16 +2,21 @@
     "name": "referral",
     "version": "0.1.0",
     "private": true,
+    "workspaces": [
+        "packages/*"
+    ],
     "scripts": {
         "dev": "next dev",
+        "build:packages": "bun run --filter '@execv/short-links' build",
         "build": "next build",
         "start": "next start",
-        "lint": "eslint",
+        "lint": "eslint src packages",
         "prettier": "prettier --write . --ignore-path .gitignore"
     },
     "dependencies": {
         "@base-ui/react": "^1.6.0",
         "@clerk/nextjs": "^7.5.12",
+        "@execv/short-links": "workspace:*",
         "@posthog/react": "^1.10.3",
         "@radix-ui/react-avatar": "^1.2.1",
         "@radix-ui/react-dropdown-menu": "^2.1.19",
@@ -55,6 +60,7 @@
         "@types/react-dom": "^19",
         "eslint": "^10.6.0",
         "eslint-config-next": "16.2.10",
+        "eslint-plugin-react": "^7.37.5",
         "playwright": "^1.61.1",
         "prettier": "^3.9.4",
         "shadcn": "^4.12.0",

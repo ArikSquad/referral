@@ -32,8 +32,6 @@ export const record = mutation({
         }
 
         const now = Date.now()
-        const accepted = link.status === 'live'
-
         await ctx.db.insert('clicks', {
             linkId: link._id,
             ownerId: link.ownerId,
@@ -51,9 +49,9 @@ export const record = mutation({
         })
 
         return {
-            accepted,
-            reason: accepted ? undefined : 'link_paused',
-            destination: accepted ? link.destination : undefined
+            accepted: true,
+            reason: undefined,
+            destination: link.destination
         }
     }
 })

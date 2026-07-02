@@ -7,7 +7,6 @@ export default defineSchema({
         name: v.string(),
         slug: v.string(),
         destination: v.string(),
-        status: v.union(v.literal('live'), v.literal('paused')),
         clicks: v.number(),
         lastClickedAt: v.optional(v.number()),
         createdVia: v.union(v.literal('dashboard'), v.literal('api')),
@@ -15,8 +14,7 @@ export default defineSchema({
         updatedAt: v.number()
     })
         .index('by_owner', ['ownerId'])
-        .index('by_slug', ['slug'])
-        .index('by_status', ['status']),
+        .index('by_slug', ['slug']),
     clicks: defineTable({
         linkId: v.id('links'),
         ownerId: v.string(),

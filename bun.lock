@@ -7,6 +7,7 @@
       "dependencies": {
         "@base-ui/react": "^1.6.0",
         "@clerk/nextjs": "^7.5.12",
+        "@execv/short-links": "workspace:*",
         "@posthog/react": "^1.10.3",
         "@radix-ui/react-avatar": "^1.2.1",
         "@radix-ui/react-dropdown-menu": "^2.1.19",
@@ -50,11 +51,19 @@
         "@types/react-dom": "^19",
         "eslint": "^10.6.0",
         "eslint-config-next": "16.2.10",
+        "eslint-plugin-react": "^7.37.5",
         "playwright": "^1.61.1",
         "prettier": "^3.9.4",
         "shadcn": "^4.12.0",
         "shiki": "^4.3.0",
         "tailwindcss": "^4",
+        "typescript": "^6.0.3",
+      },
+    },
+    "packages/short-links": {
+      "name": "@execv/short-links",
+      "version": "0.1.0",
+      "devDependencies": {
         "typescript": "^6.0.3",
       },
     },
@@ -213,6 +222,8 @@
     "@eslint/object-schema": ["@eslint/object-schema@3.0.5", "", {}, "sha512-vqTaUEgxzm+YDSdElad6PiRoX4t8VGDjCtt05zn4nU810UIx/uNEV7/lZJ6KwFThKZOzOxzXy48da+No7HZaMw=="],
 
     "@eslint/plugin-kit": ["@eslint/plugin-kit@0.7.2", "", { "dependencies": { "@eslint/core": "^1.2.1", "levn": "^0.4.1" } }, "sha512-+CNAzxglkrpNf/kKywqQfk74QjtceuOE7Qm+AF8miRvPF/wmmK5+OJOgVh3AVTT3RP2mH3+FOaxlE5v72owk0A=="],
+
+    "@execv/short-links": ["@execv/short-links@workspace:packages/short-links"],
 
     "@floating-ui/core": ["@floating-ui/core@1.7.5", "", { "dependencies": { "@floating-ui/utils": "^0.2.11" } }, "sha512-1Ih4WTWyw0+lKyFMcBHGbb5U5FtuHJuujoyyr5zTaWS5EYMeT6Jb2AuDeftsCsEuchO+mM2ij5+q9crhydzLhQ=="],
 

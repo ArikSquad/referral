@@ -1,5 +1,5 @@
-import { UserButton, useUser } from '@clerk/nextjs'
-import { Bell, ChevronRight, Command, LogIn, Plus } from 'lucide-react'
+import { UserButton } from '@clerk/nextjs'
+import { Bell, ChevronRight, Command, Plus } from 'lucide-react'
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 

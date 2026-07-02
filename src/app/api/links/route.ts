@@ -1,42 +1,60 @@
-import { ConvexHttpClient } from 'convex/browser'
-import { auth, clerkClient } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
 
-import { api } from '../../../../convex/_generated/api'
+import {
+    getConvex,
+    linkApi,
+    parseJsonBody,
+    requestFailed,
+    requireApiKeySubject,
+    serializeLink
+} from '@/lib/links-api'
 
-const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL
-const convex = convexUrl ? new ConvexHttpClient(convexUrl) : null
+export async function GET() {
+    const convexResult = getConvex()
+    if ('error' in convexResult) {
+        return convexResult.error
+    }
+
+    const authResult = await requireApiKeySubject()
+    if ('error' in authResult) {
+        return authResult.error
+    }
+
+    try {
+        const links = await convexResult.convex.query(linkApi.listForApi, {
+            clerkUserId: authResult.subjectId
+        })
+
+        return NextResponse.json({
+            links: links.map(serializeLink)
+        })
+    } catch (error) {
+        return requestFailed(error)
+    }
+}
 
 export async function POST(request: NextRequest) {
-    if (!convex) {
-        return NextResponse.json(
-            { error: 'Convex is not configured' },
-            { status: 500 }
-        )
+    const convexResult = getConvex()
+    if ('error' in convexResult) {
+        return convexResult.error
     }
 
-    const session = await auth({ acceptsToken: 'api_key' })
-
-    if (!session.isAuthenticated || session.tokenType !== 'api_key') {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const authResult = await requireApiKeySubject()
+    if ('error' in authResult) {
+        return authResult.error
     }
 
-    let body: {
+    const parsed = await parseJsonBody<{
         url?: string
         destination?: string
         slug?: string
         name?: string
+    }>(request)
+    if ('error' in parsed) {
+        return parsed.error
     }
 
-    try {
-        body = await request.json()
-    } catch {
-        return NextResponse.json(
-            { error: 'Invalid JSON body' },
-            { status: 400 }
-        )
-    }
-
+    const body = parsed.body
     const destination = body.destination ?? body.url
 
     if (!destination) {
@@ -47,17 +65,8 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-        const subjectId = session.orgId ?? session.userId
-
-        if (!subjectId) {
-            return NextResponse.json(
-                { error: 'API key subject is required' },
-                { status: 400 }
-            )
-        }
-
-        const link = await convex.mutation(api.links.createFromApi, {
-            clerkUserId: subjectId,
+        const link = await convexResult.convex.mutation(linkApi.createFromApi, {
+            clerkUserId: authResult.subjectId,
             name: body.name,
             slug: body.slug,
             destination
@@ -71,21 +80,10 @@ export async function POST(request: NextRequest) {
         }
 
         return NextResponse.json(
-            {
-                id: link._id,
-                slug: link.slug,
-                url: `https://execv.xyz/${link.slug}`,
-                destination: link.destination,
-                createdAt: link.createdAt
-            },
+            serializeLink(link),
             { status: 201 }
         )
     } catch (error) {
-        return NextResponse.json(
-            {
-                error: error instanceof Error ? error.message : 'Request failed'
-            },
-            { status: 400 }
-        )
+        return requestFailed(error)
     }
 }

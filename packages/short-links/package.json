@@ -1,0 +1,27 @@
+{
+    "name": "@execv/short-links",
+    "version": "0.1.0",
+    "description": "Utilities and typed client helpers for publishing and editing execv shortened URLs.",
+    "type": "module",
+    "license": "AGPL-3.0-only",
+    "publishConfig": {
+        "access": "public"
+    },
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js"
+        }
+    },
+    "files": [
+        "dist",
+        "README.md"
+    ],
+    "scripts": {
+        "build": "tsc -p tsconfig.json",
+        "prepublishOnly": "bun run build"
+    },
+    "devDependencies": {
+        "typescript": "^6.0.3"
+    }
+}
