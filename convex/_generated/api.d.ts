@@ -10,7 +10,6 @@
 
 import type * as clicks from "../clicks.js";
 import type * as links from "../links.js";
-import type * as users from "../users.js";
 
 import type {
   ApiFromModules,
@@ -21,7 +20,6 @@ import type {
 declare const fullApi: ApiFromModules<{
   clicks: typeof clicks;
   links: typeof links;
-  users: typeof users;
 }>;
 
 /**

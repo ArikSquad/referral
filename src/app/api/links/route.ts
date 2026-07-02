@@ -1,4 +1,5 @@
 import { ConvexHttpClient } from "convex/browser";
+import { auth, clerkClient } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 
 import { api } from "../../../../convex/_generated/api";
@@ -11,17 +12,6 @@ const convexUrl =
   process.env.NEXT_PUBLIC_CONVEX_CLOUD_URL;
 const convex = convexUrl ? new ConvexHttpClient(convexUrl) : null;
 
-function bearerToken(request: NextRequest) {
-  const header =
-    request.headers.get("authorization") ?? request.headers.get("x-api-key");
-
-  if (!header) {
-    return null;
-  }
-
-  return header.replace(/^Bearer\s+/i, "").trim();
-}
-
 export async function POST(request: NextRequest) {
   if (!convex) {
     return NextResponse.json(
@@ -30,11 +20,11 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const apiKey = bearerToken(request);
+  const session = await auth({ acceptsToken: "api_key" });
 
-  if (!apiKey) {
+  if (!session.isAuthenticated || session.tokenType !== "api_key") {
     return NextResponse.json(
-      { error: "Missing API key" },
+      { error: "Unauthorized" },
       { status: 401 }
     );
   }
@@ -57,7 +47,38 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const link = await convex.mutation(api.links.create, {
+    const subjectId = session.orgId ?? session.userId;
+
+    if (!subjectId) {
+      return NextResponse.json(
+        { error: "API key subject is required" },
+        { status: 400 }
+      );
+    }
+
+    const client = await clerkClient();
+    const [user, organization] = await Promise.all([
+      session.userId ? client.users.getUser(session.userId) : null,
+      session.orgId
+        ? client.organizations.getOrganization({
+            organizationId: session.orgId,
+          })
+        : null,
+    ]);
+    const metadata = user?.publicMetadata as { role?: string } | undefined;
+    const claims = session.claims as { role?: string } | null;
+    const namespace =
+      organization?.slug ??
+      user?.username ??
+      user?.firstName ??
+      session.userId ??
+      subjectId;
+    const link = await convex.mutation(api.links.createFromApi, {
+      clerkUserId: subjectId,
+      email: user?.emailAddresses.at(0)?.emailAddress,
+      ownerName: organization?.name ?? user?.fullName ?? user?.username ?? undefined,
+      namespace,
+      isStaff: metadata?.role === "staff" || claims?.role === "staff",
       name: body.name,
       slug: body.slug,
       destination,
@@ -74,7 +95,7 @@ export async function POST(request: NextRequest) {
       {
         id: link._id,
         slug: link.slug,
-        url: `${siteConfig.url.replace(/\/$/, "")}/${link.slug}`,
+        url: `https://${siteConfig.shortDomain.replace(/\/$/, "")}/${link.slug}`,
         destination: link.destination,
         createdAt: link.createdAt,
       },

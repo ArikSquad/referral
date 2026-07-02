@@ -14,45 +14,13 @@ type CreateLinkArgs = {
   destination: string;
 };
 
-async function getExistingCurrentUser(ctx: QueryCtx | MutationCtx) {
-  const identity = await ctx.auth.getUserIdentity();
-
-  if (!identity) {
-    throw new Error("Authentication required");
-  }
-
-  return await ctx.db
-    .query("users")
-    .withIndex("by_clerk_user_id", (q) => q.eq("clerkUserId", identity.subject))
-    .unique();
-}
-
-async function requireCurrentUser(ctx: QueryCtx | MutationCtx) {
-  const user = await getExistingCurrentUser(ctx);
-
-  if (!user || user.approvalStatus !== "approved") {
-    throw new Error("Approved account required");
-  }
-
-  return user;
-}
-
 async function requireWritableCurrentUser(ctx: MutationCtx) {
   const identity = await ctx.auth.getUserIdentity();
-
   if (!identity) {
     throw new Error("Authentication required");
   }
 
-  const existing = await getExistingCurrentUser(ctx);
-
-  if (existing) {
-    if (existing.approvalStatus !== "approved") {
-      throw new Error("Approved account required");
-    }
-
-    return existing;
-  }
+    console.log("identity: %o", identity);
 
   const claims = identity as unknown as {
     email?: string;
@@ -66,30 +34,15 @@ async function requireWritableCurrentUser(ctx: MutationCtx) {
     throw new Error("Approved account required");
   }
 
-  const now = Date.now();
-  const userId = await ctx.db.insert("users", {
-    clerkUserId: identity.subject,
-    email: claims.email ?? "",
-    name: claims.name ?? claims.nickname,
-    approvalStatus,
-    createdAt: now,
-    updatedAt: now,
-  });
-  const user = await ctx.db.get(userId);
-
-  if (!user) {
-    throw new Error("User could not be created");
-  }
-
-  return user;
+  return identity;
 }
 
 function normalizeSlug(slug: string) {
   return slug
     .trim()
     .toLowerCase()
-    .replace(/[^a-z0-9-]+/g, "-")
-    .replace(/^-+|-+$/g, "")
+    .replace(/[^a-z0-9-/]+/g, "-")
+    .replace(/^[-/]+|[-/]+$/g, "")
     .replace(/-{2,}/g, "-");
 }
 
@@ -166,11 +119,15 @@ function nameFromDestination(destination: string) {
 export const listMine = query({
   args: {},
   handler: async (ctx: QueryCtx) => {
-    const user = await requireCurrentUser(ctx);
+    const identity = await ctx.auth.getUserIdentity();
+  if (!identity) {
+    throw new Error("Authentication required");
+  }
+  console.log("identity: %o", identity);
 
     return await ctx.db
       .query("links")
-      .withIndex("by_owner", (q) => q.eq("ownerId", user._id))
+      .withIndex("by_owner", (q) => q.eq("ownerId", identity.subject))
       .order("desc")
       .collect();
   },
@@ -183,13 +140,17 @@ export const create = mutation({
     destination: v.string(),
   },
   handler: async (ctx: MutationCtx, args: CreateLinkArgs) => {
-    const user = await requireWritableCurrentUser(ctx);
+    const identity = await ctx.auth.getUserIdentity();
     const destination = normalizeDestination(args.destination);
     const slug = await reserveSlug(ctx, args.slug);
     const now = Date.now();
 
-    return await ctx.db.insert("links", {
-      ownerId: user._id,
+    if (!identity) {
+      throw new Error("Authentication required");
+    }
+
+    const linkId = await ctx.db.insert("links", {
+      ownerId: identity.subject,
       name: args.name?.trim() || nameFromDestination(destination),
       slug,
       destination,
@@ -199,6 +160,55 @@ export const create = mutation({
       createdAt: now,
       updatedAt: now,
     });
+    const link = await ctx.db.get(linkId);
+
+    if (!link) {
+      throw new Error("Link could not be created");
+    }
+
+    return link;
+  },
+});
+
+export const createFromApi = mutation({
+  args: {
+    clerkUserId: v.string(),
+    email: v.optional(v.string()),
+    name: v.optional(v.string()),
+    slug: v.optional(v.string()),
+    destination: v.string(),
+  },
+  handler: async (
+    ctx: MutationCtx,
+    args: CreateLinkArgs
+  ) => {
+    const identity = await ctx.auth.getUserIdentity();
+    const destination = normalizeDestination(args.destination);
+    const slug = await reserveSlug(ctx, args.slug);
+    const now = Date.now();
+
+    if (!identity) {
+      throw new Error("Authentication required");
+    }
+
+    const linkId = await ctx.db.insert("links", {
+      ownerId: identity.subject,
+      name: args.name?.trim() || nameFromDestination(destination),
+      slug,
+      destination,
+      status: "live",
+      clicks: 0,
+      createdVia: "api",
+      createdAt: now,
+      updatedAt: now,
+    });
+    const link = await ctx.db.get(linkId);
+
+    if (!link) {
+      throw new Error("Link could not be created");
+    }
+
+    return link;
   },
 });
 
@@ -207,10 +217,14 @@ export const pause = mutation({
     linkId: v.id("links"),
   },
   handler: async (ctx: MutationCtx, args: { linkId: Id<"links"> }) => {
-    const user = await requireCurrentUser(ctx);
+    const identity = await ctx.auth.getUserIdentity();
     const link = await ctx.db.get(args.linkId);
 
-    if (!link || link.ownerId !== user._id) {
+    if (!identity) {
+      throw new Error("Authentication required");
+    }
+
+    if (!link || link.ownerId !== identity.subject) {
       throw new Error("Link owner required");
     }
 

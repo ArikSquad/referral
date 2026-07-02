@@ -1,23 +1,46 @@
 "use client";
 
-import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { KeyRound, Loader2, Plus } from "lucide-react";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 
-import { api } from "../../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { siteConfig } from "@/lib/site";
 
+type ApiKeyListItem = {
+  id: string;
+  name: string;
+  prefix: string;
+  lastUsedAt: number | null;
+};
+
 export function ApiKeysPanel() {
-  const auth = useConvexAuth();
-  const keys = useQuery(api.apiKeys.listMine, auth.isAuthenticated ? {} : "skip");
-  const createKey = useMutation(api.apiKeys.create);
+  const [keys, setKeys] = useState<ApiKeyListItem[]>();
   const [name, setName] = useState("Production");
   const [newKey, setNewKey] = useState("");
   const [status, setStatus] = useState<"idle" | "saving" | "error">("idle");
   const [error, setError] = useState("");
+
+  async function loadKeys() {
+    const response = await fetch("/api/api-keys");
+    const payload = await response.json();
+
+    if (!response.ok) {
+      throw new Error(payload.error ?? "API keys could not be loaded.");
+    }
+
+    setKeys(payload.keys);
+  }
+
+  useEffect(() => {
+    queueMicrotask(() => {
+      loadKeys().catch((err) => {
+        setError(err instanceof Error ? err.message : "API keys could not be loaded.");
+        setStatus("error");
+      });
+    });
+  }, []);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -25,8 +48,22 @@ export function ApiKeysPanel() {
     setError("");
 
     try {
-      setNewKey(await createKey({ name }));
+      const response = await fetch("/api/api-keys", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({ name }),
+      });
+      const payload = await response.json();
+
+      if (!response.ok) {
+        throw new Error(payload.error ?? "API key could not be created.");
+      }
+
+      setNewKey(payload.key.secret);
       setName("");
+      await loadKeys();
       setStatus("idle");
     } catch (err) {
       setError(err instanceof Error ? err.message : "API key could not be created.");
@@ -86,7 +123,7 @@ export function ApiKeysPanel() {
             <div className="p-5 text-sm text-muted-foreground">No API keys yet.</div>
           ) : (
             keys.map((key) => (
-              <div key={key._id} className="flex items-center justify-between gap-4 p-5">
+              <div key={key.id} className="flex items-center justify-between gap-4 p-5">
                 <div>
                   <p className="font-medium">{key.name}</p>
                   <p className="mt-1 font-mono text-sm text-muted-foreground">

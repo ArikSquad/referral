@@ -2,21 +2,8 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
 export default defineSchema({
-  users: defineTable({
-    clerkUserId: v.string(),
-    email: v.string(),
-    name: v.optional(v.string()),
-    approvalStatus: v.union(
-      v.literal("pending"),
-      v.literal("approved"),
-      v.literal("rejected")
-    ),
-    plan: v.optional(v.string()),
-    createdAt: v.number(),
-    updatedAt: v.number(),
-  }).index("by_clerk_user_id", ["clerkUserId"]),
   links: defineTable({
-    ownerId: v.id("users"),
+    ownerId: v.string(),
     name: v.string(),
     slug: v.string(),
     destination: v.string(),
@@ -32,7 +19,7 @@ export default defineSchema({
     .index("by_status", ["status"]),
   clicks: defineTable({
     linkId: v.id("links"),
-    ownerId: v.id("users"),
+    ownerId: v.string(),
     slug: v.string(),
     ts: v.number(),
     referrer: v.optional(v.string()),

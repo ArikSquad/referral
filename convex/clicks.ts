@@ -14,25 +14,6 @@ type RecordClickArgs = {
   country?: string;
 };
 
-async function requireCurrentUser(ctx: QueryCtx | MutationCtx) {
-  const identity = await ctx.auth.getUserIdentity();
-
-  if (!identity) {
-    throw new Error("Authentication required");
-  }
-
-  const user = await ctx.db
-    .query("users")
-    .withIndex("by_clerk_user_id", (q) => q.eq("clerkUserId", identity.subject))
-    .unique();
-
-  if (!user || user.approvalStatus !== "approved") {
-    throw new Error("Approved account required");
-  }
-
-  return user;
-}
-
 export const record = mutation({
   args: {
     slug: v.string(),
@@ -80,11 +61,14 @@ export const record = mutation({
 export const recentMine = query({
   args: {},
   handler: async (ctx: QueryCtx) => {
-    const user = await requireCurrentUser(ctx);
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Authentication required");
+    }
 
     return await ctx.db
       .query("clicks")
-      .withIndex("by_owner_ts", (q) => q.eq("ownerId", user._id))
+      .withIndex("by_owner_ts", (q) => q.eq("ownerId", identity.subject))
       .order("desc")
       .take(250);
   },
@@ -95,12 +79,15 @@ export const recent = query({
     slug: v.optional(v.string()),
   },
   handler: async (ctx: QueryCtx, args: { slug?: string }) => {
-    const user = await requireCurrentUser(ctx);
-
+    const identity = await ctx.auth.getUserIdentity();
+    if (identity === null) {
+      throw new Error("Not authenticated");
+    }
+    console.log("identity: %o", identity);
     if (!args.slug) {
       return await ctx.db
         .query("clicks")
-        .withIndex("by_owner_ts", (q) => q.eq("ownerId", user._id))
+        .withIndex("by_owner_ts", (q) => q.eq("ownerId", identity.subject))
         .order("desc")
         .take(100);
     }
@@ -114,7 +101,7 @@ export const recent = query({
       return [];
     }
 
-    if (link.ownerId !== user._id) {
+    if (link.ownerId !== identity.subject) {
       throw new Error("Link owner required");
     }
 
