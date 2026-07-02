@@ -8,8 +8,7 @@ import type { ManagedLink } from '@/lib/site'
 
 export function LinksPanel({ fallback }: { fallback: ManagedLink[] }) {
     const hasDataClient = Boolean(
-        (process.env.NEXT_PUBLIC_CONVEX_URL ||
-            process.env.NEXT_PUBLIC_CONVEX_CLOUD_URL) &&
+        process.env.NEXT_PUBLIC_CONVEX_URL &&
         process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
     )
 

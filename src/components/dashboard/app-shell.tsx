@@ -40,7 +40,6 @@ export function AppShell({
                 <nav className="grid gap-1 p-3">
                     {navItems.map((item) => {
                         const Icon = item.icon
-                        const active = true
 
                         return (
                             <Link
@@ -48,9 +47,7 @@ export function AppShell({
                                 href={item.href}
                                 prefetch
                                 className={cn(
-                                    'flex h-9 items-center gap-3 rounded-md px-3 text-sm font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground',
-                                    active &&
-                                        'bg-foreground text-background hover:bg-foreground hover:text-background'
+                                    'flex h-9 items-center gap-3 rounded-md px-3 text-sm font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground'
                                 )}
                             >
                                 <Icon className="size-4" />
@@ -105,13 +102,12 @@ export function AppShell({
                     <div className="flex gap-1 overflow-x-auto border-t px-2 py-2 lg:hidden">
                         {navItems.map((item) => {
                             const Icon = item.icon
-                            const active = true
 
                             return (
                                 <Button
                                     asChild
                                     key={item.href}
-                                    variant={active ? 'secondary' : 'ghost'}
+                                    variant={'ghost'}
                                     size="sm"
                                 >
                                     <Link href={item.href} prefetch>

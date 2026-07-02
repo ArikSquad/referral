@@ -14,6 +14,13 @@ type CreateLinkArgs = {
     destination: string
 }
 
+type UpdateLinkArgs = {
+    linkId: Id<'links'>
+    name?: string
+    slug?: string
+    destination?: string
+}
+
 function normalizeSlug(slug: string) {
     return slug
         .trim()
@@ -67,6 +74,33 @@ async function reserveSlug(ctx: MutationCtx, requestedSlug?: string) {
     }
 
     throw new Error('Could not allocate a short slug')
+}
+
+async function updateSlug(
+    ctx: MutationCtx,
+    linkId: Id<'links'>,
+    requestedSlug?: string
+) {
+    if (requestedSlug === undefined) {
+        return undefined
+    }
+
+    const slug = normalizeSlug(requestedSlug)
+
+    if (!slug) {
+        throw new Error('Slug is required')
+    }
+
+    const existing = await ctx.db
+        .query('links')
+        .withIndex('by_slug', (q) => q.eq('slug', slug))
+        .unique()
+
+    if (existing && existing._id !== linkId) {
+        throw new Error('Slug already exists')
+    }
+
+    return slug
 }
 
 function normalizeDestination(destination: string) {
@@ -205,5 +239,66 @@ export const pause = mutation({
             status: 'paused',
             updatedAt: Date.now()
         })
+    }
+})
+
+export const update = mutation({
+    args: {
+        linkId: v.id('links'),
+        name: v.optional(v.string()),
+        slug: v.optional(v.string()),
+        destination: v.optional(v.string())
+    },
+    handler: async (ctx: MutationCtx, args: UpdateLinkArgs) => {
+        const identity = await ctx.auth.getUserIdentity()
+        const link = await ctx.db.get(args.linkId)
+
+        if (!identity) {
+            throw new Error('Authentication required')
+        }
+
+        if (!link || link.ownerId !== identity.subject) {
+            throw new Error('Link owner required')
+        }
+
+        const slug = await updateSlug(ctx, args.linkId, args.slug)
+        const destination =
+            args.destination === undefined
+                ? undefined
+                : normalizeDestination(args.destination)
+        const name =
+            args.name === undefined
+                ? undefined
+                : args.name.trim() ||
+                  nameFromDestination(destination ?? link.destination)
+
+        await ctx.db.patch(args.linkId, {
+            ...(name !== undefined ? { name } : {}),
+            ...(slug !== undefined ? { slug } : {}),
+            ...(destination !== undefined ? { destination } : {}),
+            updatedAt: Date.now()
+        })
+
+        return await ctx.db.get(args.linkId)
+    }
+})
+
+export const remove = mutation({
+    args: {
+        linkId: v.id('links')
+    },
+    handler: async (ctx: MutationCtx, args: { linkId: Id<'links'> }) => {
+        const identity = await ctx.auth.getUserIdentity()
+        const link = await ctx.db.get(args.linkId)
+
+        if (!identity) {
+            throw new Error('Authentication required')
+        }
+
+        if (!link || link.ownerId !== identity.subject) {
+            throw new Error('Link owner required')
+        }
+
+        await ctx.db.delete(args.linkId)
     }
 })

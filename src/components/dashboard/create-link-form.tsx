@@ -9,16 +9,12 @@ import { api } from '../../../convex/_generated/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+    createShortLinkPayload,
+    normalizeShortLinkSlug,
+    shortLinkUrl
+} from '@/lib/short-links'
 import { siteConfig } from '@/lib/site'
-
-function slugify(value: string) {
-    return value
-        .trim()
-        .toLowerCase()
-        .replace(/[^a-z0-9-]+/g, '-')
-        .replace(/^-+|-+$/g, '')
-        .replace(/-{2,}/g, '-')
-}
 
 function userFacingMutationError(err: unknown) {
     if (!(err instanceof Error)) {
@@ -37,8 +33,7 @@ function userFacingMutationError(err: unknown) {
 
 export function CreateLinkForm() {
     const hasDataClient = Boolean(
-        (process.env.NEXT_PUBLIC_CONVEX_URL ||
-            process.env.NEXT_PUBLIC_CONVEX_CLOUD_URL) &&
+        process.env.NEXT_PUBLIC_CONVEX_URL &&
         process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
     )
 
@@ -73,7 +68,7 @@ function ConnectedCreateLinkForm() {
         setError('')
 
         try {
-            await createLink(payload)
+            await createLink(createShortLinkPayload(payload))
             router.push('/app/links')
             router.refresh()
         } catch (err) {
@@ -116,8 +111,8 @@ function CreateLinkShell({
     const [destination, setDestination] = useState('')
     const [name, setName] = useState('')
     const [slug, setSlug] = useState('')
-    const normalizedSlug = slugify(slug)
-    const shortUrl = `https://execv.xyz/${normalizedSlug || 'abc1234'}`
+    const normalizedSlug = normalizeShortLinkSlug(slug)
+    const shortUrl = shortLinkUrl(normalizedSlug || 'abc1234')
 
     async function submit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault()
@@ -173,7 +168,11 @@ function CreateLinkShell({
                             onChange={(event) => {
                                 setName(event.target.value)
                                 if (!slug) {
-                                    setSlug(slugify(event.target.value))
+                                    setSlug(
+                                        normalizeShortLinkSlug(
+                                            event.target.value
+                                        )
+                                    )
                                 }
                             }}
                         />

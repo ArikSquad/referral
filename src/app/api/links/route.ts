@@ -4,9 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 import { api } from '../../../../convex/_generated/api'
 
-const convexUrl =
-    process.env.NEXT_PUBLIC_CONVEX_URL ??
-    process.env.NEXT_PUBLIC_CONVEX_CLOUD_URL
+const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL
 const convex = convexUrl ? new ConvexHttpClient(convexUrl) : null
 
 export async function POST(request: NextRequest) {
