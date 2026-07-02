@@ -60,6 +60,39 @@ export default defineSchema({
     .index("by_slug", ["slug"])
     .index("by_status", ["status"]),
 
+  collections: defineTable({
+    ownerId: v.id("users"),
+    name: v.string(),
+    description: v.optional(v.string()),
+    slug: v.string(),
+    status: v.union(v.literal("review"), v.literal("live"), v.literal("paused")),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_owner", ["ownerId"])
+    .index("by_slug", ["slug"]),
+
+  collectionItems: defineTable({
+    collectionId: v.id("collections"),
+    ownerId: v.id("users"),
+    url: v.string(),
+    title: v.string(),
+    description: v.optional(v.string()),
+    imageUrl: v.optional(v.string()),
+    price: v.optional(v.string()),
+    merchant: v.optional(v.string()),
+    position: v.number(),
+    metadataStatus: v.union(
+      v.literal("enriched"),
+      v.literal("basic"),
+      v.literal("failed")
+    ),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_collection", ["collectionId"])
+    .index("by_owner", ["ownerId"]),
+
   affiliateIntegrations: defineTable({
     ownerId: v.id("users"),
     provider: v.string(),

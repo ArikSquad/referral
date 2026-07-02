@@ -10,7 +10,7 @@ import {
 
 type CreateLinkArgs = {
   name: string;
-  slug: string;
+  slug?: string;
   destination: string;
   mode: "Whitelist" | "Referral" | "Campaign" | "Internal";
   allowlist: string[];
@@ -24,6 +24,19 @@ type CreateLinkArgs = {
   expiresAt?: number;
 };
 
+async function getExistingCurrentUser(ctx: QueryCtx | MutationCtx) {
+  const identity = await ctx.auth.getUserIdentity();
+
+  if (!identity) {
+    throw new Error("Authentication required");
+  }
+
+  return await ctx.db
+    .query("users")
+    .withIndex("by_clerk_user_id", (q) => q.eq("clerkUserId", identity.subject))
+    .unique();
+}
+
 async function requireCurrentUser(ctx: QueryCtx | MutationCtx) {
   const identity = await ctx.auth.getUserIdentity();
 
@@ -31,31 +44,96 @@ async function requireCurrentUser(ctx: QueryCtx | MutationCtx) {
     throw new Error("Authentication required");
   }
 
-  const user = await ctx.db
-    .query("users")
-    .withIndex("by_clerk_user_id", (q) => q.eq("clerkUserId", identity.subject))
-    .unique();
+  const existing = await getExistingCurrentUser(ctx);
 
-  if (!user || user.approvalStatus !== "approved") {
+  const claims = identity as unknown as {
+    email?: string;
+    name?: string;
+    nickname?: string;
+    publicMetadata?: { approvalStatus?: "pending" | "approved" | "rejected" };
+  };
+  const approvalStatus =
+    existing?.approvalStatus ?? claims.publicMetadata?.approvalStatus ?? "approved";
+
+  if (approvalStatus !== "approved") {
     throw new Error("Approved account required");
+  }
+
+  if (existing) {
+    return existing;
+  }
+
+  throw new Error("Approved account required");
+}
+
+async function requireWritableCurrentUser(ctx: MutationCtx) {
+  const identity = await ctx.auth.getUserIdentity();
+
+  if (!identity) {
+    throw new Error("Authentication required");
+  }
+
+  const existing = await getExistingCurrentUser(ctx);
+  const claims = identity as unknown as {
+    email?: string;
+    name?: string;
+    nickname?: string;
+    publicMetadata?: { approvalStatus?: "pending" | "approved" | "rejected" };
+  };
+  const approvalStatus =
+    existing?.approvalStatus ?? claims.publicMetadata?.approvalStatus ?? "approved";
+
+  if (approvalStatus !== "approved") {
+    throw new Error("Approved account required");
+  }
+
+  if (existing) {
+    return existing;
+  }
+
+  const now = Date.now();
+  const userId = await ctx.db.insert("users", {
+    clerkUserId: identity.subject,
+    email: claims.email ?? "",
+    name: claims.name ?? claims.nickname,
+    approvalStatus,
+    createdAt: now,
+    updatedAt: now,
+  });
+
+  const user = await ctx.db.get(userId);
+
+  if (!user) {
+    throw new Error("User could not be created");
   }
 
   return user;
 }
 
-async function requireWorkspaceAdmin(ctx: QueryCtx | MutationCtx) {
-  await requireCurrentUser(ctx);
+async function isApplicationStaff(ctx: QueryCtx | MutationCtx) {
   const identity = await ctx.auth.getUserIdentity();
   const claims = identity as unknown as {
     publicMetadata?: { role?: string };
+    privateMetadata?: { role?: string };
+    metadata?: { role?: string };
     organization_role?: string;
     org_role?: string;
   };
   const role =
-    claims.publicMetadata?.role ?? claims.organization_role ?? claims.org_role;
+    claims.publicMetadata?.role ??
+    claims.privateMetadata?.role ??
+    claims.metadata?.role ??
+    claims.organization_role ??
+    claims.org_role;
 
-  if (!["admin", "org:admin"].includes(role ?? "")) {
-    throw new Error("Workspace admin required");
+  return role === "staff";
+}
+
+async function requireWorkspaceAdmin(ctx: QueryCtx | MutationCtx) {
+  await requireCurrentUser(ctx);
+
+  if (!(await isApplicationStaff(ctx))) {
+    throw new Error("Application staff required");
   }
 }
 
@@ -74,7 +152,58 @@ function normalizeSlug(slug: string) {
     .replace(/-{2,}/g, "-");
 }
 
-function normalizeDestination(destination: string, args: CreateLinkArgs) {
+function randomSlug() {
+  const alphabet = "abcdefghijklmnopqrstuvwxyz0123456789";
+  let slug = "";
+
+  for (let index = 0; index < 7; index += 1) {
+    slug += alphabet[Math.floor(Math.random() * alphabet.length)];
+  }
+
+  return slug;
+}
+
+async function reserveSlug(ctx: MutationCtx, requestedSlug?: string) {
+  const canChooseSlug = await isApplicationStaff(ctx);
+
+  if (canChooseSlug) {
+    const slug = normalizeSlug(requestedSlug ?? "");
+
+    if (!slug) {
+      throw new Error("Slug is required");
+    }
+
+    const existing = await ctx.db
+      .query("links")
+      .withIndex("by_slug", (q) => q.eq("slug", slug))
+      .unique();
+
+    if (existing) {
+      throw new Error("Slug already exists");
+    }
+
+    return slug;
+  }
+
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const slug = randomSlug();
+    const existing = await ctx.db
+      .query("links")
+      .withIndex("by_slug", (q) => q.eq("slug", slug))
+      .unique();
+
+    if (!existing) {
+      return slug;
+    }
+  }
+
+  throw new Error("Could not allocate a short slug");
+}
+
+function normalizeDestination(
+  destination: string,
+  args: Omit<CreateLinkArgs, "slug"> & { slug: string }
+) {
   let url: URL;
 
   try {
@@ -122,10 +251,21 @@ export const listMine = query({
   },
 });
 
+export const capabilities = query({
+  args: {},
+  handler: async (ctx: QueryCtx) => {
+    await requireCurrentUser(ctx);
+
+    return {
+      canChooseSlug: await isApplicationStaff(ctx),
+    };
+  },
+});
+
 export const create = mutation({
   args: {
     name: v.string(),
-    slug: v.string(),
+    slug: v.optional(v.string()),
     destination: v.string(),
     mode: v.union(
       v.literal("Whitelist"),
@@ -144,21 +284,8 @@ export const create = mutation({
     expiresAt: v.optional(v.number()),
   },
   handler: async (ctx: MutationCtx, args: CreateLinkArgs) => {
-    const user = await requireCurrentUser(ctx);
-    const slug = normalizeSlug(args.slug);
-
-    if (!slug) {
-      throw new Error("Slug is required");
-    }
-
-    const existing = await ctx.db
-      .query("links")
-      .withIndex("by_slug", (q) => q.eq("slug", slug))
-      .unique();
-
-    if (existing) {
-      throw new Error("Slug already exists");
-    }
+    const user = await requireWritableCurrentUser(ctx);
+    const slug = await reserveSlug(ctx, args.slug);
 
     const now = Date.now();
     let affiliateIntegration;

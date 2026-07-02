@@ -1,12 +1,10 @@
-const authConfig = {
-  providers: [
-    {
-      domain:
-        process.env.CLERK_JWT_ISSUER_DOMAIN ??
-        "https://replace-with-your-clerk-domain.clerk.accounts.dev",
-      applicationID: "convex",
-    },
-  ],
-};
+import { AuthConfig } from "convex/server";
 
-export default authConfig;
+export default {
+  providers: [
+        {
+          domain: process.env.CLERK_JWT_ISSUER_DOMAIN!,
+          applicationID: "convex",
+        },
+      ]
+} satisfies AuthConfig;

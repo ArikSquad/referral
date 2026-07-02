@@ -1,6 +1,6 @@
 "use client";
 
-import { UserButton } from "@clerk/nextjs";
+import { UserButton, useUser } from "@clerk/nextjs";
 import {
   Bell,
   ChevronRight,
@@ -108,21 +108,7 @@ export function AppShell({
                   New link
                 </Link>
               </Button>
-              {hasClerk ? (
-                <UserButton
-                  appearance={{
-                    elements: {
-                      avatarBox: "size-8",
-                    },
-                  }}
-                />
-              ) : (
-                <Button asChild variant="ghost" size="icon" aria-label="Sign in">
-                  <Link href="/sign-in">
-                    <LogIn className="size-4" />
-                  </Link>
-                </Button>
-              )}
+              <AppShellAuthControl />
             </div>
           </div>
           <div className="flex gap-1 overflow-x-auto border-t px-2 py-2 lg:hidden">
@@ -154,5 +140,43 @@ export function AppShell({
         </main>
       </div>
     </div>
+  );
+}
+
+function AppShellAuthControl() {
+  if (!hasClerk) {
+    return (
+      <Button asChild variant="ghost" size="icon" aria-label="Sign in">
+        <Link href="/sign-in">
+          <LogIn className="size-4" />
+        </Link>
+      </Button>
+    );
+  }
+
+  return <HostedAppShellAuthControl />;
+}
+
+function HostedAppShellAuthControl() {
+  const { isLoaded, isSignedIn } = useUser();
+
+  if (!isLoaded || !isSignedIn) {
+    return (
+      <Button asChild variant="ghost" size="icon" aria-label="Sign in">
+        <Link href="/sign-in">
+          <LogIn className="size-4" />
+        </Link>
+      </Button>
+    );
+  }
+
+  return (
+    <UserButton
+      appearance={{
+        elements: {
+          avatarBox: "size-8",
+        },
+      }}
+    />
   );
 }

@@ -1,18 +1,27 @@
 "use client";
 
-import { useQuery } from "convex/react";
+import { useConvexAuth, useQuery } from "convex/react";
 
 import { api } from "../../../convex/_generated/api";
 import { LinkTable } from "@/components/dashboard/link-table";
 import type { ManagedLink } from "@/lib/site";
 
 export function LinksPanel({ fallback }: { fallback: ManagedLink[] }) {
-  const hasDataClient = Boolean(process.env.NEXT_PUBLIC_CONVEX_CLOUD_URL);
-  const links = useQuery(api.links.listMine);
+  const hasDataClient = Boolean(
+    process.env.NEXT_PUBLIC_CONVEX_CLOUD_URL &&
+      process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+  );
 
   if (!hasDataClient) {
     return <LinkTable links={fallback} />;
   }
+
+  return <ConnectedLinksPanel />;
+}
+
+function ConnectedLinksPanel() {
+  const auth = useConvexAuth();
+  const links = useQuery(api.links.listMine, auth.isAuthenticated ? {} : "skip");
 
   if (links === undefined) {
     return (

@@ -1,9 +1,10 @@
 "use client";
 
-import { useMutation, useQuery } from "convex/react";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import {
   CalendarDays,
   Check,
+  GalleryHorizontalEnd,
   Globe2,
   KeyRound,
   Link2,
@@ -199,18 +200,31 @@ function CountrySelect({
 }
 
 export function CreateLinkForm() {
-  const hasDataClient = Boolean(process.env.NEXT_PUBLIC_CONVEX_CLOUD_URL);
+  const hasDataClient = Boolean(
+    process.env.NEXT_PUBLIC_CONVEX_CLOUD_URL &&
+      process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+  );
 
   if (!hasDataClient) {
-    return <CreateLinkShell disabledReason="Configure NEXT_PUBLIC_CONVEX_CLOUD_URL to create live links." />;
+    return <CreateLinkShell disabledReason="Configure Convex and Clerk to create live links." />;
   }
 
   return <ConnectedCreateLinkForm />;
 }
 
 function ConnectedCreateLinkForm() {
+  const auth = useConvexAuth();
   const createLink = useMutation(api.links.create);
-  const integrations = useQuery(api.affiliateIntegrations.listMine) ?? [];
+  const createCollection = useMutation(api.collections.create);
+  const capabilities = useQuery(
+    api.links.capabilities,
+    auth.isAuthenticated ? {} : "skip"
+  );
+  const integrations =
+    useQuery(
+      api.affiliateIntegrations.listMine,
+      auth.isAuthenticated ? {} : "skip"
+    ) ?? [];
   const router = useRouter();
   const [status, setStatus] = useState<"idle" | "saving" | "error">("idle");
   const [error, setError] = useState("");
@@ -229,8 +243,23 @@ function ConnectedCreateLinkForm() {
     }
   }
 
+  async function onCreateCollection(payload: CollectionPayload) {
+    setStatus("saving");
+    setError("");
+
+    try {
+      await createCollection(payload);
+      router.push("/app/links");
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Collection could not be created.");
+      setStatus("error");
+    }
+  }
+
   return (
     <CreateLinkShell
+      canChooseSlug={capabilities?.canChooseSlug === true}
       integrations={integrations.map((integration) => ({
         id: integration._id,
         name: integration.name,
@@ -238,6 +267,7 @@ function ConnectedCreateLinkForm() {
         trackingId: integration.trackingId,
       }))}
       onSubmit={onSubmit}
+      onCreateCollection={onCreateCollection}
       status={status}
       error={error}
     />
@@ -246,7 +276,7 @@ function ConnectedCreateLinkForm() {
 
 type LinkPayload = {
   name: string;
-  slug: string;
+  slug?: string;
   destination: string;
   mode: LinkMode;
   allowlist: string[];
@@ -260,13 +290,32 @@ type LinkPayload = {
   expiresAt?: number;
 };
 
+type CollectionItemPayload = {
+  url: string;
+  title?: string;
+  description?: string;
+  imageUrl?: string;
+  price?: string;
+  merchant?: string;
+  metadataStatus: "enriched" | "basic" | "failed";
+};
+
+type CollectionPayload = {
+  name: string;
+  description?: string;
+  items: CollectionItemPayload[];
+};
+
 function CreateLinkShell({
+  canChooseSlug = false,
   integrations = [],
   onSubmit,
+  onCreateCollection,
   status = "idle",
   error,
   disabledReason,
 }: {
+  canChooseSlug?: boolean;
   integrations?: Array<{
     id: Id<"affiliateIntegrations">;
     name: string;
@@ -274,10 +323,12 @@ function CreateLinkShell({
     trackingId?: string;
   }>;
   onSubmit?: (payload: LinkPayload) => Promise<void>;
+  onCreateCollection?: (payload: CollectionPayload) => Promise<void>;
   status?: "idle" | "saving" | "error";
   error?: string;
   disabledReason?: string;
 }) {
+  const [createMode, setCreateMode] = useState<"link" | "collection">("link");
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [destination, setDestination] = useState("");
@@ -294,13 +345,20 @@ function CreateLinkShell({
   const [expiresAt, setExpiresAt] = useState("");
   const [autoSlug, setAutoSlug] = useState(true);
   const [manualProvider, setManualProvider] = useState(false);
+  const [collectionText, setCollectionText] = useState("");
+  const [collectionDescription, setCollectionDescription] = useState("");
+  const [collectionItems, setCollectionItems] = useState<CollectionItemPayload[]>([]);
+  const [importing, setImporting] = useState(false);
+  const [importError, setImportError] = useState("");
 
   const normalizedSlug = slugify(slug);
   const selectedIntegration = integrations.find((integration) => integration.id === integrationId);
   const selectedProvider = selectedIntegration?.provider ?? provider;
   const providerMeta = providerById.get(selectedProvider);
   const isAffiliateLink = integrationId !== "none" || manualProvider;
-  const shortUrl = `https://${siteConfig.shortDomain}/${normalizedSlug || "your-link"}`;
+  const shortUrl = canChooseSlug
+    ? `https://${siteConfig.shortDomain}/${normalizedSlug || "your-link"}`
+    : `https://${siteConfig.shortDomain}/random-id`;
   const trackedPreview = isAffiliateLink
     ? destination
     : buildTrackedPreview(destination, mode, normalizedSlug, name);
@@ -309,13 +367,78 @@ function CreateLinkShell({
   function updateName(value: string) {
     setName(value);
 
-    if (autoSlug) {
+    if (canChooseSlug && autoSlug) {
       setSlug(slugify(value));
+    }
+  }
+
+  async function importCollectionItems() {
+    const urls = splitLines(collectionText);
+
+    setImportError("");
+
+    if (!urls.length) {
+      setImportError("Paste at least one URL.");
+      return;
+    }
+
+    setImporting(true);
+
+    try {
+      const results = await Promise.all(
+        urls.map(async (url) => {
+          const response = await fetch("/app/api/link-metadata", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ url }),
+          });
+
+          if (!response.ok) {
+            return {
+              url,
+              title: new URL(url).hostname,
+              metadataStatus: "failed" as const,
+            };
+          }
+
+          return (await response.json()) as CollectionItemPayload;
+        })
+      );
+
+      setCollectionItems(results);
+    } catch (err) {
+      setImportError(
+        err instanceof Error ? err.message : "Links could not be imported."
+      );
+    } finally {
+      setImporting(false);
     }
   }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (createMode === "collection") {
+      if (!onCreateCollection) {
+        return;
+      }
+
+      const items =
+        collectionItems.length > 0
+          ? collectionItems
+          : splitLines(collectionText).map((url) => ({
+              url,
+              title: new URL(url).hostname,
+              metadataStatus: "basic" as const,
+            }));
+
+      await onCreateCollection({
+        name: name.trim(),
+        description: collectionDescription.trim() || undefined,
+        items,
+      });
+      return;
+    }
 
     if (!onSubmit) {
       return;
@@ -323,7 +446,7 @@ function CreateLinkShell({
 
     await onSubmit({
       name: name.trim(),
-      slug: normalizedSlug,
+      slug: canChooseSlug ? normalizedSlug : undefined,
       destination: destination.trim(),
       mode,
       allowlist: allowlistHosts,
@@ -354,14 +477,52 @@ function CreateLinkShell({
                 countries, schedule, and destination rules.
               </p>
             </div>
-            <Badge variant="outline" className="w-fit gap-1">
-              <Sparkles className="size-3.5" />
-              UTM-aware
-            </Badge>
           </div>
         </div>
 
         <div className="grid gap-6 p-5">
+          <section className="grid gap-3">
+            <Label>Create</Label>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={() => setCreateMode("link")}
+                className={cn(
+                  "rounded-lg border p-3 text-left transition-colors",
+                  createMode === "link" ? "border-primary bg-primary/5" : "hover:bg-muted/60"
+                )}
+              >
+                <span className="flex items-center gap-2 text-sm font-medium">
+                  <Link2 className="size-4" />
+                  Single redirect
+                </span>
+                <span className="mt-2 block text-xs leading-5 text-muted-foreground">
+                  One short URL that sends visitors to one destination.
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setCreateMode("collection")}
+                className={cn(
+                  "rounded-lg border p-3 text-left transition-colors",
+                  createMode === "collection"
+                    ? "border-primary bg-primary/5"
+                    : "hover:bg-muted/60"
+                )}
+              >
+                <span className="flex items-center gap-2 text-sm font-medium">
+                  <GalleryHorizontalEnd className="size-4" />
+                  Collection page
+                </span>
+                <span className="mt-2 block text-xs leading-5 text-muted-foreground">
+                  One short URL that shows several links with imported product details.
+                </span>
+              </button>
+            </div>
+          </section>
+
+          <Separator />
+
           <section className="grid gap-4">
             <div className="flex items-center gap-2">
               <Link2 className="size-4 text-muted-foreground" />
@@ -378,7 +539,8 @@ function CreateLinkShell({
                   required
                 />
               </div>
-              <div className="grid gap-2">
+              {createMode === "link" && canChooseSlug ? (
+                <div className="grid gap-2">
                 <div className="flex items-center justify-between gap-3">
                   <Label htmlFor="slug">Short slug</Label>
                   <label className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -405,21 +567,106 @@ function CreateLinkShell({
                     required
                   />
                 </div>
+                </div>
+              ) : (
+                <div className="grid gap-2">
+                  <Label>Short slug</Label>
+                  <div className="flex min-h-10 items-center rounded-lg border bg-muted px-3 text-sm text-muted-foreground">
+                    {createMode === "collection"
+                      ? "Collections receive a short random slug."
+                      : "Your short slug is generated automatically."}
+                  </div>
+                </div>
+              )}
+            </div>
+            {createMode === "link" ? (
+              <div className="grid gap-2">
+                <Label htmlFor="destination">Destination URL</Label>
+                <Input
+                  id="destination"
+                  value={destination}
+                  onChange={(event) => setDestination(event.target.value)}
+                  placeholder="https://example.com/partner/july"
+                  type="url"
+                  required
+                />
               </div>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="destination">Destination URL</Label>
-              <Input
-                id="destination"
-                value={destination}
-                onChange={(event) => setDestination(event.target.value)}
-                placeholder="https://example.com/partner/july"
-                type="url"
-                required
-              />
-            </div>
+            ) : (
+              <div className="grid gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="collectionDescription">Collection description</Label>
+                  <Textarea
+                    id="collectionDescription"
+                    value={collectionDescription}
+                    onChange={(event) => setCollectionDescription(event.target.value)}
+                    placeholder="Optional context for this collection."
+                    rows={2}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="collectionLinks">Links to import</Label>
+                  <Textarea
+                    id="collectionLinks"
+                    value={collectionText}
+                    onChange={(event) => setCollectionText(event.target.value)}
+                    placeholder="https://store.example/product-1&#10;https://store.example/product-2"
+                    rows={7}
+                    required={collectionItems.length === 0}
+                  />
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="text-xs text-muted-foreground">
+                      Paste one URL per line or comma-separated. Product pages use available metadata.
+                    </p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={importCollectionItems}
+                      disabled={importing}
+                    >
+                      {importing ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
+                      Import metadata
+                    </Button>
+                  </div>
+                  {importError ? (
+                    <p className="text-xs text-destructive">{importError}</p>
+                  ) : null}
+                </div>
+                {collectionItems.length > 0 ? (
+                  <div className="grid gap-3">
+                    {collectionItems.map((item) => (
+                      <div key={item.url} className="grid gap-3 rounded-lg border p-3 sm:grid-cols-[72px_1fr]">
+                        {item.imageUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={item.imageUrl}
+                            alt=""
+                            className="aspect-square w-full rounded-md object-cover"
+                          />
+                        ) : (
+                          <div className="flex aspect-square w-full items-center justify-center rounded-md bg-muted text-xs text-muted-foreground">
+                            No image
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium">{item.title}</p>
+                          <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted-foreground">
+                            {item.description ?? item.url}
+                          </p>
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            {item.price ? <Badge variant="outline">{item.price}</Badge> : null}
+                            <Badge variant="outline">{item.metadataStatus}</Badge>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            )}
           </section>
 
+          {createMode === "link" ? (
+            <>
           <Separator />
 
           <section className="grid gap-4">
@@ -487,6 +734,8 @@ function CreateLinkShell({
               />
             </div>
           </section>
+            </>
+          ) : null}
 
           <Separator />
 
@@ -626,7 +875,7 @@ function CreateLinkShell({
           </div>
           <Button type="submit" disabled={Boolean(disabledReason) || status === "saving"}>
             {status === "saving" ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
-            Create link
+            {createMode === "collection" ? "Create collection" : "Create link"}
           </Button>
         </div>
       </form>
