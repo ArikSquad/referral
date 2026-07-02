@@ -1,19 +1,30 @@
 import type { ReactNode } from 'react'
+import { Suspense } from 'react'
+import Link from 'next/link'
 
 import { AppShell } from '@/components/dashboard/app-shell'
 import { getAppAccess } from '@/lib/auth'
 import { Button } from '@/components/ui/button'
-import { Hourglass, Link, ShieldX } from 'lucide-react'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Hourglass, ShieldX } from 'lucide-react'
 
 export const metadata = {
     title: 'Dashboard'
 }
 
-export default async function DashboardLayout({
+export default function DashboardLayout({
     children
 }: {
     children: ReactNode
 }) {
+    return (
+        <Suspense fallback={<DashboardShellSkeleton />}>
+            <DashboardAccessGate>{children}</DashboardAccessGate>
+        </Suspense>
+    )
+}
+
+async function DashboardAccessGate({ children }: { children: ReactNode }) {
     const access = await getAppAccess()
 
     if (access.status !== 'approved') {
@@ -56,4 +67,65 @@ export default async function DashboardLayout({
     }
 
     return <AppShell access={access}>{children}</AppShell>
+}
+
+function DashboardShellSkeleton() {
+    return (
+        <div className="min-h-screen bg-background text-foreground">
+            <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 border-r bg-background lg:block">
+                <div className="flex h-16 items-center gap-3 border-b px-5">
+                    <Skeleton className="size-8 rounded-md" />
+                    <div className="space-y-2">
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-3 w-16" />
+                    </div>
+                </div>
+                <nav className="grid gap-1 p-3">
+                    {Array.from({ length: 5 }).map((_, index) => (
+                        <div
+                            key={index}
+                            className="flex h-9 items-center gap-3 rounded-md px-3"
+                        >
+                            <Skeleton className="size-4" />
+                            <Skeleton className="h-4 w-24" />
+                        </div>
+                    ))}
+                </nav>
+            </aside>
+
+            <div className="lg:pl-64">
+                <header className="sticky top-0 z-30 border-b bg-background/90 backdrop-blur">
+                    <div className="flex h-16 items-center justify-between gap-3 px-4 sm:px-6">
+                        <div className="min-w-0 space-y-2">
+                            <Skeleton className="h-3 w-32" />
+                            <Skeleton className="h-4 w-40" />
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Skeleton className="size-9 rounded-md" />
+                            <Skeleton className="size-9 rounded-md" />
+                            <Skeleton className="hidden h-9 w-24 rounded-md sm:block" />
+                            <Skeleton className="size-8 rounded-full" />
+                        </div>
+                    </div>
+                    <div className="flex gap-1 overflow-x-auto border-t px-2 py-2 lg:hidden">
+                        {Array.from({ length: 4 }).map((_, index) => (
+                            <Skeleton
+                                key={index}
+                                className="h-8 w-24 rounded-md"
+                            />
+                        ))}
+                    </div>
+                </header>
+                <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 lg:py-8">
+                    <Skeleton className="h-10 w-64" />
+                    <div className="grid gap-4 md:grid-cols-3">
+                        <Skeleton className="h-32 rounded-lg" />
+                        <Skeleton className="h-32 rounded-lg" />
+                        <Skeleton className="h-32 rounded-lg" />
+                    </div>
+                    <Skeleton className="h-80 rounded-lg" />
+                </main>
+            </div>
+        </div>
+    )
 }

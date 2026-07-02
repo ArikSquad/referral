@@ -1,6 +1,7 @@
 import 'server-only'
 
 import { auth, currentUser } from '@clerk/nextjs/server'
+import { cacheLife } from 'next/cache'
 import { redirect } from 'next/navigation'
 
 export type AppAccess = {
@@ -10,6 +11,9 @@ export type AppAccess = {
 }
 
 export async function getAppAccess(): Promise<AppAccess> {
+    'use cache: private'
+    cacheLife({ stale: 60 })
+
     const session = await auth()
 
     if (!session.userId) {
