@@ -98,7 +98,7 @@ export default function Home() {
                 </span>
               </div>
               <pre className="overflow-x-auto pt-4 font-mono text-sm leading-7">
-                <CodeBlock lang="ts">{`const link = await fetch("https://execv.dev/api/links", {
+                <CodeBlock lang="ts">{`const link = await fetch("https://execv.xyz/api/links", {
   method: "POST",
   headers: {
     authorization: \`Bearer \${process.env.EXECV_API_KEY}\`,
