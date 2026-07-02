@@ -45,10 +45,14 @@ export function ClickAnalyticsChart() {
         return <Chart data={clickSeries} />
     }
 
-    return <ConnectedClickAnalyticsChart />
+    return <ConnectedClickAnalyticsChart fallback={clickSeries} />
 }
 
-function ConnectedClickAnalyticsChart() {
+function ConnectedClickAnalyticsChart({
+    fallback
+}: {
+    fallback: Array<{ day: string; clicks: number }>
+}) {
     const auth = useConvexAuth()
     const clicks = useQuery(
         api.clicks.recentMine,
@@ -56,32 +60,13 @@ function ConnectedClickAnalyticsChart() {
     )
 
     if (clicks === undefined) {
-        return (
-            <div className="flex h-80 flex-col justify-center rounded-lg border bg-card p-6 shadow-sm">
-                <h2 className="text-base font-semibold">Clicks</h2>
-                <p className="mt-2 text-sm text-muted-foreground">
-                    Loading click events...
-                </p>
-            </div>
-        )
+        return <Chart data={fallback} />
     }
 
     return <Chart data={groupClicks(clicks)} />
 }
 
 function Chart({ data }: { data: Array<{ day: string; clicks: number }> }) {
-    if (data.length === 0) {
-        return (
-            <div className="flex h-80 flex-col justify-center rounded-lg border bg-card p-6 shadow-sm">
-                <h2 className="text-base font-semibold">Clicks</h2>
-                <p className="mt-2 max-w-md text-sm leading-6 text-muted-foreground">
-                    Click charts will populate after a short link receives
-                    redirect events.
-                </p>
-            </div>
-        )
-    }
-
     return (
         <div className="h-80 rounded-lg border bg-card p-4 shadow-sm">
             <div className="mb-4">

@@ -41,7 +41,9 @@ export function LinkTable({
                     collecting click events.
                 </p>
                 <Button asChild className="mt-5">
-                    <Link href="/app/links/new">Create link</Link>
+                    <Link href="/app/links/new" prefetch>
+                        Create link
+                    </Link>
                 </Button>
             </div>
         )

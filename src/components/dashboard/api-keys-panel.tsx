@@ -6,17 +6,16 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import type { ApiKeyListItem } from '@/lib/api-keys'
 import { siteConfig } from '@/lib/site'
+import { CodeBlock } from '../code-block'
 
-type ApiKeyListItem = {
-    id: string
-    name: string
-    prefix: string
-    lastUsedAt: number | null
-}
-
-export function ApiKeysPanel() {
-    const [keys, setKeys] = useState<ApiKeyListItem[]>()
+export function ApiKeysPanel({
+    initialKeys = []
+}: {
+    initialKeys?: ApiKeyListItem[]
+}) {
+    const [keys, setKeys] = useState<ApiKeyListItem[]>(initialKeys)
     const [name, setName] = useState('Production')
     const [newKey, setNewKey] = useState('')
     const [status, setStatus] = useState<'idle' | 'saving' | 'error'>('idle')
@@ -82,7 +81,6 @@ export function ApiKeysPanel() {
     }
 
     return (
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
             <section className="rounded-lg border bg-card shadow-sm">
                 <div className="border-b p-5">
                     <h1 className="text-2xl font-semibold tracking-tight">
@@ -140,11 +138,7 @@ export function ApiKeysPanel() {
                 ) : null}
 
                 <div className="divide-y">
-                    {keys === undefined ? (
-                        <div className="p-5 text-sm text-muted-foreground">
-                            Loading keys...
-                        </div>
-                    ) : keys.length === 0 ? (
+                    {keys.length === 0 ? (
                         <div className="p-5 text-sm text-muted-foreground">
                             No API keys yet.
                         </div>
@@ -170,28 +164,5 @@ export function ApiKeysPanel() {
                     )}
                 </div>
             </section>
-
-            <aside className="rounded-lg border bg-card p-5 shadow-sm">
-                <div className="flex items-center gap-2">
-                    <KeyRound className="size-4" />
-                    <h2 className="font-semibold">Create a link</h2>
-                </div>
-                <pre className="mt-4 overflow-x-auto rounded-md bg-muted p-4 text-xs leading-6">
-                    <code>{`const response = await fetch("${siteConfig.url}/api/links", {
-  method: "POST",
-  headers: {
-    authorization: \`Bearer \${process.env.EXECV_API_KEY}\`,
-    "content-type": "application/json"
-  },
-  body: JSON.stringify({
-    destination: "https://example.com/docs",
-    slug: "docs"
-  })
-});
-
-const link = await response.json();`}</code>
-                </pre>
-            </aside>
-        </div>
     )
 }

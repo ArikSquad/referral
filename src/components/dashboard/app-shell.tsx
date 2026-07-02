@@ -46,6 +46,7 @@ export function AppShell({
                             <Link
                                 key={item.href}
                                 href={item.href}
+                                prefetch
                                 className={cn(
                                     'flex h-9 items-center gap-3 rounded-md px-3 text-sm font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground',
                                     active &&
@@ -93,7 +94,7 @@ export function AppShell({
                                 <TooltipContent>Product updates</TooltipContent>
                             </Tooltip>
                             <Button asChild className="hidden sm:inline-flex">
-                                <Link href="/app/links/new">
+                                <Link href="/app/links/new" prefetch>
                                     <Plus className="size-4" />
                                     New link
                                 </Link>
@@ -113,7 +114,7 @@ export function AppShell({
                                     variant={active ? 'secondary' : 'ghost'}
                                     size="sm"
                                 >
-                                    <Link href={item.href}>
+                                    <Link href={item.href} prefetch>
                                         <Icon className="size-4" />
                                         {item.label}
                                     </Link>

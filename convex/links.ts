@@ -100,7 +100,6 @@ export const listMine = query({
         if (!identity) {
             throw new Error('Authentication required')
         }
-        console.log('identity: %o', identity)
 
         return await ctx.db
             .query('links')

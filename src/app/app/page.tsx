@@ -21,13 +21,13 @@ export default function DashboardPage() {
                 </div>
                 <div className="flex flex-col gap-2 sm:flex-row">
                     <Button asChild variant="outline">
-                        <Link href="/app/api-keys">
+                        <Link href="/app/api-keys" prefetch>
                             <KeyRound className="size-4" />
                             API keys
                         </Link>
                     </Button>
                     <Button asChild>
-                        <Link href="/app/links/new">
+                        <Link href="/app/links/new" prefetch>
                             <Link2 className="size-4" />
                             Create link
                             <ArrowUpRight className="size-4" />
@@ -44,7 +44,9 @@ export default function DashboardPage() {
                 <div className="mb-3 flex items-center justify-between gap-3">
                     <h2 className="text-lg font-semibold">Recent links</h2>
                     <Button asChild variant="outline" size="sm">
-                        <Link href="/app/links">All links</Link>
+                        <Link href="/app/links" prefetch>
+                            All links
+                        </Link>
                     </Button>
                 </div>
                 <LinksPanel fallback={managedLinks} />

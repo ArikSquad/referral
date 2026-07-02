@@ -17,10 +17,10 @@ export function LinksPanel({ fallback }: { fallback: ManagedLink[] }) {
         return <LinkTable links={fallback} />
     }
 
-    return <ConnectedLinksPanel />
+    return <ConnectedLinksPanel fallback={fallback} />
 }
 
-function ConnectedLinksPanel() {
+function ConnectedLinksPanel({ fallback }: { fallback: ManagedLink[] }) {
     const auth = useConvexAuth()
     const links = useQuery(
         api.links.listMine,
@@ -28,11 +28,7 @@ function ConnectedLinksPanel() {
     )
 
     if (links === undefined) {
-        return (
-            <div className="rounded-lg border bg-card p-8 text-sm text-muted-foreground shadow-sm">
-                Loading links...
-            </div>
-        )
+        return <LinkTable links={fallback} />
     }
 
     return (

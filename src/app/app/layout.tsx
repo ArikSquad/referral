@@ -8,15 +8,13 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Hourglass, ShieldX } from 'lucide-react'
 
+export const prefetch = 'allow-runtime'
+
 export const metadata = {
     title: 'Dashboard'
 }
 
-export default function DashboardLayout({
-    children
-}: {
-    children: ReactNode
-}) {
+export default function DashboardLayout({ children }: { children: ReactNode }) {
     return (
         <Suspense fallback={<DashboardShellSkeleton />}>
             <DashboardAccessGate>{children}</DashboardAccessGate>

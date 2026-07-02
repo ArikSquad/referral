@@ -83,7 +83,6 @@ export const recent = query({
         if (identity === null) {
             throw new Error('Not authenticated')
         }
-        console.log('identity: %o', identity)
         if (!args.slug) {
             return await ctx.db
                 .query('clicks')

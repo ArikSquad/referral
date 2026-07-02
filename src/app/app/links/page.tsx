@@ -22,7 +22,9 @@ export default function LinksPage() {
                     </p>
                 </div>
                 <Button asChild>
-                    <Link href="/app/links/new">New link</Link>
+                    <Link href="/app/links/new" prefetch>
+                        New link
+                    </Link>
                 </Button>
             </section>
             <LinksPanel fallback={managedLinks} />
