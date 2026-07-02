@@ -1,65 +1,274 @@
-import Image from "next/image";
+import {
+  ArrowRight,
+  Braces,
+  CheckCircle2,
+  GitBranch,
+  Globe2,
+  KeyRound,
+  LockKeyhole,
+  RadioTower,
+  ShieldCheck,
+  TerminalSquare,
+  Webhook,
+} from "lucide-react";
+import Link from "next/link";
+
+import { AuthNavActions } from "@/components/auth/auth-actions";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { siteConfig } from "@/lib/site";
+
+const capabilities = [
+  {
+    icon: ShieldCheck,
+    title: "Policy-aware redirects",
+    body: "Country rules, access keys, destination state, and approval status are checked before a referral link resolves.",
+  },
+  {
+    icon: Webhook,
+    title: "Affiliate network surface",
+    body: "Attach Amazon Associates or another partner network to each program so revenue status can be synced from real integrations.",
+  },
+  {
+    icon: KeyRound,
+    title: "Workspace access",
+    body: "Members, roles, and invitations stay scoped to the current workspace while every app write checks that boundary.",
+  },
+];
+
+const pipeline = [
+  "request.waitlist({ mode: 'indefinite' })",
+  "billing.subscribe({ unlock: 'now' })",
+  "link.resolve({ country, accessKey, referrer })",
+  "network.sync({ provider: 'amazon-associates', workspaceId })",
+];
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="min-h-screen bg-background text-foreground">
+      <header className="sticky top-0 z-50 border-b bg-background/88 backdrop-blur">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
+          <Link href="/" className="flex items-center gap-3">
+            <span className="flex size-9 items-center justify-center rounded-lg bg-foreground text-sm font-semibold text-background">
+              <TerminalSquare className="size-4" />
+            </span>
+            <span className="font-semibold tracking-tight">
+              {siteConfig.name}
+            </span>
+          </Link>
+          <nav className="hidden items-center gap-6 text-sm font-medium text-muted-foreground md:flex">
+            <a href="#platform" className="hover:text-foreground">
+              Platform
+            </a>
+            <a href="#access" className="hover:text-foreground">
+              Access
+            </a>
+            <a href="#integrations" className="hover:text-foreground">
+              Integrations
+            </a>
+            <Link href="/pricing" className="hover:text-foreground">
+              Pricing
+            </Link>
+          </nav>
+          <AuthNavActions />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+      </header>
+
+      <main>
+        <section className="relative overflow-hidden border-b">
+          <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_18%_18%,oklch(0.93_0.06_178),transparent_32%),radial-gradient(circle_at_84%_10%,oklch(0.92_0.08_252),transparent_28%),linear-gradient(180deg,oklch(0.99_0.006_235),var(--background))] dark:bg-[radial-gradient(circle_at_18%_18%,oklch(0.34_0.08_178),transparent_32%),radial-gradient(circle_at_84%_10%,oklch(0.28_0.08_252),transparent_28%),linear-gradient(180deg,oklch(0.18_0.018_245),var(--background))]" />
+          <div className="mx-auto grid min-h-[calc(100svh-8rem)] max-w-7xl items-center gap-12 px-4 py-16 sm:px-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(420px,1.05fr)] lg:py-20">
+            <div>
+              <h1 className="mt-6 max-w-3xl text-5xl font-semibold tracking-tight sm:text-6xl lg:text-7xl">
+                {siteConfig.name}
+              </h1>
+              <p className="mt-6 max-w-2xl text-lg leading-8 text-muted-foreground sm:text-xl">
+                Governed referral links for developers and operators who need
+                paid access, country limits, team workspaces, and affiliate
+                revenue status in the same control plane.
+              </p>
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <Button size="lg" asChild>
+                  <Link href="/pricing">
+                    Pay for access now
+                    <ArrowRight className="size-4" />
+                  </Link>
+                </Button>
+                <Button size="lg" variant="outline" asChild>
+                  <Link href="/waitlist">Wait indefinitely</Link>
+                </Button>
+              </div>
+            </div>
+
+            <div className="relative">
+              <div className="rounded-lg border bg-card/86 p-4 shadow-2xl shadow-foreground/10 backdrop-blur">
+                <div className="flex items-center gap-2 border-b pb-3">
+                  <span className="size-3 rounded-full bg-red-500" />
+                  <span className="size-3 rounded-full bg-amber-500" />
+                  <span className="size-3 rounded-full bg-emerald-500" />
+                  <span className="ml-3 font-mono text-xs text-muted-foreground">
+                    redirect.policy.ts
+                  </span>
+                </div>
+                <pre className="overflow-x-auto pt-4 font-mono text-sm leading-7">
+                  <code>{`const decision = await execv.resolve({
+  slug: "prime-launch",
+  country: request.geo.country,
+  accessKey: searchParams.get("key"),
+  workspaceId: session.workspaceId,
+});
+
+if (!decision.accepted) {
+  return redirect("/access-denied");
+}
+
+await affiliates.sync("amazon-associates");`}</code>
+                </pre>
+              </div>
+              <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                {[
+                  ["P95", "<100ms"],
+                  ["Mode", "paid or wait"],
+                  ["Scope", "org-bound"],
+                ].map(([label, value]) => (
+                  <div
+                    key={label}
+                    className="rounded-lg border bg-background/80 p-4 backdrop-blur"
+                  >
+                    <p className="font-mono text-xs text-muted-foreground">
+                      {label}
+                    </p>
+                    <p className="mt-2 font-semibold">{value}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="platform" className="mx-auto max-w-7xl px-4 py-20 sm:px-6">
+          <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr]">
+            <div>
+              <h2 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">
+                Referral links with real access decisions.
+              </h2>
+              <p className="mt-4 text-base leading-7 text-muted-foreground">
+                The product is built around the redirect path: resolve a link,
+                check workspace membership, enforce policy, record the
+                outcome, and sync revenue with the external partner program.
+              </p>
+            </div>
+            <div className="grid gap-4 md:grid-cols-3">
+              {capabilities.map((feature) => {
+                const Icon = feature.icon;
+                return (
+                  <article key={feature.title} className="rounded-lg border bg-card p-5">
+                    <div className="flex size-10 items-center justify-center rounded-lg bg-muted">
+                      <Icon className="size-5" />
+                    </div>
+                    <h3 className="mt-5 text-lg font-semibold">
+                      {feature.title}
+                    </h3>
+                    <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                      {feature.body}
+                    </p>
+                  </article>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        <section id="access" className="border-y bg-muted/35">
+          <div className="mx-auto grid max-w-7xl gap-10 px-4 py-20 sm:px-6 lg:grid-cols-2">
+            <div>
+              <h2 className="mt-4 text-3xl font-semibold tracking-tight">
+                Wait forever, or pay to unlock now.
+              </h2>
+              <p className="mt-4 text-base leading-7 text-muted-foreground">
+                Free access is not guaranteed. Joining the waitlist means
+                waiting indefinitely unless a free release happens later. Paid
+                access can unlock the app immediately, and access may be
+                terminated after a subscription ends if the product policy
+                requires it.
+              </p>
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                <Button asChild>
+                  <Link href="/pricing">Choose paid access</Link>
+                </Button>
+                <Button variant="outline" asChild>
+                  <Link href="/waitlist">Join waitlist</Link>
+                </Button>
+              </div>
+            </div>
+            <div className="grid gap-3">
+              {[
+                [LockKeyhole, "Manual approval still applies to risky workspaces."],
+                [Globe2, "Country allow and deny rules live on each referral link."],
+                [GitBranch, "Team invitations stay inside each workspace."],
+                [CheckCircle2, "Subscription state gates dashboard access."],
+              ].map(([Icon, text]) => (
+                <div
+                  key={text as string}
+                  className="flex items-center gap-3 rounded-lg border bg-background p-4"
+                >
+                  <Icon className="size-5 text-primary" />
+                  <span className="text-sm">{text as string}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="integrations" className="mx-auto max-w-7xl px-4 py-20 sm:px-6">
+          <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+            <div>
+              <h2 className="mt-4 text-3xl font-semibold tracking-tight">
+                Designed for Amazon Associates and partner networks.
+              </h2>
+              <p className="mt-4 text-base leading-7 text-muted-foreground">
+                Let each workspace connect its own tracking IDs, API keys, and
+                webhooks, then show profit status from the source network
+                instead of sample revenue.
+              </p>
+            </div>
+            <div className="rounded-lg border bg-card p-5">
+              <div className="flex items-center gap-3">
+                <Braces className="size-5 text-primary" />
+                <h3 className="font-semibold">Event pipeline</h3>
+              </div>
+              <div className="mt-5 grid gap-3">
+                {pipeline.map((item) => (
+                  <div
+                    key={item}
+                    className="flex items-center gap-3 rounded-lg bg-muted px-3 py-2 font-mono text-sm"
+                  >
+                    <RadioTower className="size-4 text-muted-foreground" />
+                    {item}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
+
+      <footer className="border-t">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-8 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <p>{siteConfig.name} by MikArt Europe</p>
+          <div className="flex gap-4">
+            <Link href="/waitlist" className="hover:text-foreground">
+              Waitlist
+            </Link>
+            <Link href="/pricing" className="hover:text-foreground">
+              Pricing
+            </Link>
+            <Link href="/app" className="hover:text-foreground">
+              Dashboard
+            </Link>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
