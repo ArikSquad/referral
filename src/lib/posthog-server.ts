@@ -1,43 +1,43 @@
-import "server-only";
+import 'server-only'
 
-import { PostHog } from "posthog-node";
+import { PostHog } from 'posthog-node'
 
-let posthog: PostHog | null = null;
+let posthog: PostHog | null = null
 
 export function getServerPostHog() {
-  const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
+    const key = process.env.NEXT_PUBLIC_POSTHOG_KEY
 
-  if (!key) {
-    return null;
-  }
+    if (!key) {
+        return null
+    }
 
-  if (!posthog) {
-    posthog = new PostHog(key, {
-      host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
-      flushAt: 1,
-      flushInterval: 0,
-    });
-  }
+    if (!posthog) {
+        posthog = new PostHog(key, {
+            host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
+            flushAt: 1,
+            flushInterval: 0
+        })
+    }
 
-  return posthog;
+    return posthog
 }
 
 export async function captureServerEvent(
-  event: string,
-  distinctId: string,
-  properties: Record<string, unknown>
+    event: string,
+    distinctId: string,
+    properties: Record<string, unknown>
 ) {
-  const client = getServerPostHog();
+    const client = getServerPostHog()
 
-  if (!client) {
-    return;
-  }
+    if (!client) {
+        return
+    }
 
-  client.capture({
-    distinctId,
-    event,
-    properties,
-  });
+    client.capture({
+        distinctId,
+        event,
+        properties
+    })
 
-  await client.flush();
+    await client.flush()
 }

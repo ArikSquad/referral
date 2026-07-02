@@ -1,62 +1,60 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import type { Metadata } from 'next'
+import { Geist, Geist_Mono } from 'next/font/google'
 
-import { siteConfig } from "@/lib/site";
+import { siteConfig } from '@/lib/site'
 
-import "./globals.css";
-import { ThemeProvider } from "next-themes";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { ConvexClientProvider } from "@/lib/convex-client";
+import './globals.css'
+import { ThemeProvider } from 'next-themes'
+import { TooltipProvider } from '@/components/ui/tooltip'
+import { ConvexClientProvider } from '@/lib/convex-client'
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
+    variable: '--font-geist-sans',
+    subsets: ['latin']
+})
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+    variable: '--font-geist-mono',
+    subsets: ['latin']
+})
 
 export const metadata: Metadata = {
-  metadataBase: new URL(siteConfig.url),
-  title: {
-    default: `${siteConfig.name} - Developer URL shortener`,
-    template: `%s - ${siteConfig.name}`,
-  },
-  description: siteConfig.description,
-  openGraph: {
-    title: `${siteConfig.name} - Developer URL shortener`,
+    metadataBase: new URL(siteConfig.url),
+    title: {
+        default: `${siteConfig.name} - Developer URL shortener`,
+        template: `%s - ${siteConfig.name}`
+    },
     description: siteConfig.description,
-    images: ["/banner.png"],
-  },
-};
+    openGraph: {
+        title: `${siteConfig.name} - Developer URL shortener`,
+        description: siteConfig.description,
+        images: ['/banner.png']
+    }
+}
 
 export default function RootLayout({
-  children,
+    children
 }: Readonly<{
-  children: React.ReactNode;
+    children: React.ReactNode
 }>) {
-  return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-      suppressHydrationWarning
-    >
-      <body className="min-h-full">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
+    return (
+        <html
+            lang="en"
+            className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+            suppressHydrationWarning
         >
-          <TooltipProvider>
-            <ConvexClientProvider>
-              {children}
-            </ConvexClientProvider>
-          </TooltipProvider>
-        </ThemeProvider>
-      </body>
-    </html>
-  );
+            <body className="min-h-full">
+                <ThemeProvider
+                    attribute="class"
+                    defaultTheme="system"
+                    enableSystem
+                    disableTransitionOnChange
+                >
+                    <TooltipProvider>
+                        <ConvexClientProvider>{children}</ConvexClientProvider>
+                    </TooltipProvider>
+                </ThemeProvider>
+            </body>
+        </html>
+    )
 }

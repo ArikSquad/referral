@@ -1,30 +1,31 @@
-import Link from "next/link";
+import Link from 'next/link'
 
-import { LinksPanel } from "@/components/dashboard/links-panel";
-import { Button } from "@/components/ui/button";
-import { managedLinks } from "@/lib/site";
+import { LinksPanel } from '@/components/dashboard/links-panel'
+import { Button } from '@/components/ui/button'
+import { managedLinks } from '@/lib/site'
 
 export const metadata = {
-  title: "Links",
-};
+    title: 'Links'
+}
 
 export default function LinksPage() {
-  return (
-    <>
-      <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="mt-3 text-3xl font-semibold tracking-tight">
-            Managed short links
-          </h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-            Dashboard-created and API-created URLs with click tracking.
-          </p>
-        </div>
-        <Button asChild>
-          <Link href="/app/links/new">New link</Link>
-        </Button>
-      </section>
-      <LinksPanel fallback={managedLinks} />
-    </>
-  );
+    return (
+        <>
+            <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                    <h1 className="mt-3 text-3xl font-semibold tracking-tight">
+                        Managed short links
+                    </h1>
+                    <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+                        Dashboard-created and API-created URLs with click
+                        tracking.
+                    </p>
+                </div>
+                <Button asChild>
+                    <Link href="/app/links/new">New link</Link>
+                </Button>
+            </section>
+            <LinksPanel fallback={managedLinks} />
+        </>
+    )
 }

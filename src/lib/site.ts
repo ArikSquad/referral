@@ -1,60 +1,55 @@
-import {
-  Activity,
-  Globe2,
-  KeyRound,
-  Link2,
-} from "lucide-react";
+import { Activity, Globe2, KeyRound, Link2 } from 'lucide-react'
 
 export const siteConfig = {
-  name: "execv",
-  tagline: "URL shortener for developers.",
-  description:
-    "execv helps developers create short links from a dashboard or API and track clicks without running redirect infrastructure.",
-  url: "https://execv.xyz",
-};
+    name: 'execv',
+    tagline: 'URL shortener for developers.',
+    description:
+        'execv helps developers create short links from a dashboard or API and track clicks without running redirect infrastructure.',
+    url: 'https://execv.xyz'
+}
 
 export type ManagedLink = {
-  id: string;
-  name: string;
-  slug: string;
-  destination: string;
-  owner: string;
-  status: "live" | "paused";
-  clicks: number;
-  lastClick: string;
-  createdVia?: "dashboard" | "api";
-};
+    id: string
+    name: string
+    slug: string
+    destination: string
+    owner: string
+    status: 'live' | 'paused'
+    clicks: number
+    lastClick: string
+    createdVia?: 'dashboard' | 'api'
+}
 
-export const managedLinks: ManagedLink[] = [];
+export const managedLinks: ManagedLink[] = []
 
 export const clickSeries: Array<{
-  day: string;
-  clicks: number;
-}> = [];
+    day: string
+    clicks: number
+}> = []
 
-export const sourceSeries: Array<{ source: string; value: number }> = [];
+export const sourceSeries: Array<{ source: string; value: number }> = []
 
 export const approvalQueue: Array<{
-  requester: string;
-  email: string;
-  reason: string;
-  status: string;
-  submitted: string;
-}> = [];
+    requester: string
+    email: string
+    reason: string
+    status: string
+    submitted: string
+}> = []
 
 export const audienceRows: Array<{
-  segment: string;
-  members: string;
-  policy: string;
-}> = [];
+    segment: string
+    members: string
+    policy: string
+}> = []
 
 export const redirectTargets = new Map(
-  managedLinks.map((link) => [link.slug, link.destination])
-);
+    managedLinks.map((link) => [link.slug, link.destination])
+)
 
 export const navItems = [
-  { label: "Overview", href: "/app", icon: Activity },
-  { label: "Links", href: "/app/links", icon: Link2 },
-  { label: "API keys", href: "/app/api-keys", icon: KeyRound },
-  { label: "Analytics", href: "/app/analytics", icon: Globe2 }
-];
+    { label: 'Overview', href: '/app', icon: Activity },
+    { label: 'Links', href: '/app/links', icon: Link2 },
+    { label: 'API keys', href: '/app/api-keys', icon: KeyRound },
+    { label: 'Analytics', href: '/app/analytics', icon: Globe2 }
+]

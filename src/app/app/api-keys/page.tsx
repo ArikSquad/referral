@@ -1,9 +1,9 @@
-import { ApiKeysPanel } from "@/components/dashboard/api-keys-panel";
+import { ApiKeysPanel } from '@/components/dashboard/api-keys-panel'
 
 export const metadata = {
-  title: "API keys",
-};
+    title: 'API keys'
+}
 
 export default function ApiKeysPage() {
-  return <ApiKeysPanel />;
+    return <ApiKeysPanel />
 }
