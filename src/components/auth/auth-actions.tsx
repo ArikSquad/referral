@@ -62,7 +62,3 @@ export function InlineSignUp() {
 export function WaitlistPanel() {
   return <Waitlist />;
 }
-
-export function BillingPanel() {
-  return <PricingTable />;
-}

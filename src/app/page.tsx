@@ -1,9 +1,38 @@
 import { ArrowRight, BarChart3, KeyRound, Link2, TerminalSquare } from "lucide-react";
 import Link from "next/link";
-
+import type { BundledLanguage } from 'shiki'
+import { codeToHtml } from 'shiki'
 import { AuthNavActions } from "@/components/auth/auth-actions";
 import { Button } from "@/components/ui/button";
 import { siteConfig } from "@/lib/site";
+
+interface Props {
+  children: string
+  lang: BundledLanguage
+}
+
+async function CodeBlock(props: Props) {
+  const out = await codeToHtml(props.children, {
+    lang: props.lang,
+    theme: 'material-theme-ocean',
+    // disable background:
+transformers: [
+      {
+        name: 'remove-pre-background',
+        pre(node) {
+          const style = String(node.properties.style ?? '')
+
+          node.properties.style = style
+            .split(';')
+            .filter((decl) => !decl.trim().startsWith('background-color:'))
+            .join(';')
+        },
+      },
+    ],
+  })
+
+  return <div dangerouslySetInnerHTML={{ __html: out }} />
+}
 
 const features = [
   {
@@ -51,7 +80,7 @@ export default function Home() {
                 {siteConfig.name}
               </h1>
               <p className="mt-6 max-w-2xl text-lg leading-8 text-muted-foreground">
-                Paid URL shortening for developers. Create links from your backend, redirect fast, and track clicks in one small dashboard.
+                URL shortening for developers. Create links from your backend, redirect fast, and track clicks in one small dashboard.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Button size="lg" asChild>
@@ -76,7 +105,7 @@ export default function Home() {
                 </span>
               </div>
               <pre className="overflow-x-auto pt-4 font-mono text-sm leading-7">
-                <code>{`const link = await fetch("https://execv.dev/api/links", {
+                <CodeBlock lang="ts">{`const link = await fetch("https://execv.dev/api/links", {
   method: "POST",
   headers: {
     authorization: \`Bearer \${process.env.EXECV_API_KEY}\`,
@@ -88,7 +117,7 @@ export default function Home() {
   })
 }).then((res) => res.json());
 
-console.log(link.url);`}</code>
+console.log(link.url);`}</CodeBlock>
               </pre>
             </div>
           </div>
@@ -116,7 +145,7 @@ console.log(link.url);`}</code>
 
       <footer className="border-t">
         <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-8 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          <p>{siteConfig.name}</p>
+          <p>{siteConfig.name} by MikArt Europe</p>
           <div className="flex gap-4">
             <Link href="/pricing" className="hover:text-foreground">Pricing</Link>
             <Link href="/app" className="hover:text-foreground">Dashboard</Link>

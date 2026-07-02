@@ -1,8 +1,8 @@
 import Link from "next/link";
 
-import { BillingPanel } from "@/components/auth/auth-actions";
 import { Button } from "@/components/ui/button";
 import { siteConfig } from "@/lib/site";
+import { PricingTable } from "@clerk/nextjs";
 
 export const metadata = {
   title: "Pricing",
@@ -30,7 +30,7 @@ export default function PricingPage() {
           </p>
         </div>
         <div className="mt-10">
-          <BillingPanel />
+          <PricingTable highlightedPlan="pro"  />
         </div>
       </section>
     </main>
